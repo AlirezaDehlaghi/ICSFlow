@@ -1,4 +1,7 @@
 import argparse
+import os
+import sys
+from datetime import datetime
 
 from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, TCP
@@ -28,24 +31,26 @@ class Flow:
         parser.add_argument('--attackerip', metavar='attack IP ',
                             help='attack IP to classify flows', required=False)
 
-
         parser.parse_args()
         args = parser.parse_args()
 
-        Flow.ATTACKER_IP= args.attackerip
-        with open(args.attacks) as f:
-            lines = f.readlines()
+        Flow.ATTACKER_IP = args.attackerip
+        if args.attacks:
+            if not os.path.isfile(args.attacks):
+                print('"{}" does not exist'.format(args.attacks), file=sys.stderr)
+                sys.exit(-1)
 
-        for line in lines:
-            if line.isspace():
-                continue
-            paras = line.split(',')
-            Flow.ATTACKS.append([paras[0],
-                                datetime.fromisoformat(paras[1].strip()).timestamp(),
-                                datetime.fromisoformat(paras[2].strip()).timestamp()])
-
-        print(Flow.ATTACKS)
-
+            with open(args.attacks) as f:
+                lines = f.readlines()
+            for line in lines:
+                if line.isspace():
+                    continue
+                paras = line.split(',')
+                Flow.ATTACKS.append([paras[0],
+                                     datetime.fromisoformat(paras[1].strip()).timestamp(),
+                                     datetime.fromisoformat(paras[2].strip()).timestamp()])
+        else:
+            args.attacks = False
 
         if not os.path.isfile(args.input):
             print('"{}" does not exist'.format(args.input), file=sys.stderr)
@@ -343,12 +348,13 @@ class Flow:
         res["Sen_AckDelay"] = str(Flow.avg(self.sen_delay))
         res["Rec_AckDelay"] = str(Flow.avg(self.rec_delay))
 
-        class_label = 'Normal'
-        if self.src == Flow.ATTACKER_IP or self.des == Flow.ATTACKER_IP:
-            for i in range(len(Flow.ATTACKS)):
-                if not (Flow.ATTACKS[i][1]>= self.end_time() or Flow.ATTACKS[i][2]<= self.start_time()):
-                    class_label = Flow.ATTACKS[i][0]
-        res["class"] = class_label
+        if Flow.ATTACKS:
+            class_label = 'Normal'
+            if not Flow.ATTACKER_IP or (self.src == Flow.ATTACKER_IP or self.des == Flow.ATTACKER_IP):
+                for i in range(len(Flow.ATTACKS)):
+                    if not (Flow.ATTACKS[i][1]>= self.end_time() or Flow.ATTACKS[i][2]<= self.start_time()):
+                        class_label = Flow.ATTACKS[i][0]
+            res["class"] = class_label
         return res
 
     def compute_dual_parameters(self, prefix, target, res):
