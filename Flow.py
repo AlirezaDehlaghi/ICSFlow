@@ -89,12 +89,12 @@ class Flow:
             if 'type' not in ether_pkt.fields:
                 # LLC frames will have 'len' instead of 'type'.
                 # We disregard those
-                logger_detail.info("Note: LLC frames Packet:{}".format(count))
+                logger_detail.info("Note: LLC frames Packet:{} on {}({})".format(count, Flow.format_time(pkt_time), pkt_time))
                 continue
 
             if ether_pkt.type != 0x0800:
                 # disregard non-IPv4 packets
-                logger_detail.info("Note: non-IPv4 packets Packet:{}".format(count))
+                logger_detail.info("Note: non-IPv4 packets Packet:{}  on {}({})".format(count, Flow.format_time(pkt_time), pkt_time))
                 continue
 
             ip_pkt = ether_pkt[IP]
@@ -235,10 +235,8 @@ class Flow:
         return self.end_time() - self.start_time() + 0.000001
 
     @staticmethod
-    def format_time( value):
-        sec = int(value)
-        msec = int (value * 1000000) - sec * 1000000
-        return datetime.fromtimestamp(value).strftime('%m/%d/%Y %H:%M:%S %Z')+":" +str(msec).zfill(6)
+    def format_time(value):
+        return str(datetime.fromtimestamp(value))
 
     @staticmethod
     def packets_cnt(packets):
