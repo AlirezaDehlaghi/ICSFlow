@@ -3,7 +3,7 @@ import os
 import sys
 from datetime import datetime
 
-from scapy.layers.l2 import Ether
+from scapy.layers.l2 import Ether, ARP
 from scapy.layers.inet import IP, TCP
 from scapy.all import *
 
@@ -94,7 +94,12 @@ class Flow:
 
             if ether_pkt.type != 0x0800:
                 # disregard non-IPv4 packets
-                logger_detail.info("Note: non-IPv4 packets Packet:{}  on {}({})".format(count, Flow.format_time(pkt_time), pkt_time))
+                logger_detail.info("Note: non-IPv4 packets Packet:{} with type:{} on {}({})".format(count, ether_pkt.type, Flow.format_time(pkt_time), pkt_time))
+                print(ether_pkt.fields)
+                print (ether_pkt.dst)
+                if ether_pkt.type == 2054:
+                    arp_packet = ether_pkt[ARP]
+                    print (arp_packet.fields)
                 continue
 
             ip_pkt = ether_pkt[IP]
