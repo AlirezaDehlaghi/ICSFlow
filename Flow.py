@@ -1,22 +1,66 @@
 import argparse
-import os
-import sys
-from datetime import datetime
-
-from scapy.layers.l2 import Ether, ARP
-from scapy.layers.inet import IP, TCP
+from scapy.layers.l2 import Ether
 from scapy.all import *
+from Helper import setup_logger, get_packet_time, format_time, format_decimal, average, maximum
+from PacketParameter import PacketParameter
 
-from Packet_Parameter import PacketParameter
 
 class Flow:
     HEADER_PRINTED = False
     REFERENCE_TIME = 0
-    ATTACKER_IP = ''
-    ATTACKS = []
+    Attacks = False
 
     @classmethod
     def compile(cls):
+        args = Flow.get_args()
+        Flow.Attacks = args.attacks
+
+        # create loggers
+        dataset = setup_logger(
+            args.output, logging.Formatter('%(message)s'), file_dir="./", file_ext='.csv')
+        logger = setup_logger(
+            args.output + "_log", logging.Formatter('%(message)s'), file_dir="./", file_ext='.txt')
+
+        count = 0
+        Flow.HEADER_PRINTED = False
+        flow_dict = dict()
+
+        for (pkt_data, pkt_metadata,) in RawPcapReader(args.input):
+            count += 1
+            pkt_time = get_packet_time(pkt_metadata)
+
+            if count == 1:
+                Flow.REFERENCE_TIME = pkt_time
+
+            ether_pkt = Ether(pkt_data)
+
+            if 'type' not in ether_pkt.fields:
+                logger.info(
+                    "Note: LLC frames Packet:{} on {}({})".format(count, format_time(pkt_time), pkt_time))
+                continue
+
+            packet_para = PacketParameter(ether_pkt, pkt_time, logger)
+            flow_src = min(packet_para.get_src(), packet_para.get_dst())
+            flow_dst = max(packet_para.get_src(), packet_para.get_dst())
+            flow_proto = packet_para.protocol_name
+
+            if not flow_dict.keys().__contains__((flow_src, flow_dst, flow_proto)):
+                flow_dict[(flow_src, flow_dst, flow_proto)] = Flow(flow_src,
+                                                                   flow_dst,
+                                                                   flow_proto,
+                                                                   args.interval,
+                                                                   dataset)
+
+            flow_dict[(flow_src, flow_dst, flow_proto)].add_packet(packet_para)
+
+            if count % 1000 == 0:
+                print(count)
+
+        for flow in flow_dict.values():
+            flow.flush_flow()
+
+    @classmethod
+    def get_args(cls):
         parser = argparse.ArgumentParser(description='PCAP reader')
         parser.add_argument('--input', metavar='<pcap file name>',
                             help='pcap file to parse', required=True)
@@ -28,172 +72,131 @@ class Flow:
         parser.add_argument('--attacks', metavar='attack log csv file',
                             help='attack file to classify flows', required=False)
 
-        parser.add_argument('--attackerip', metavar='attack IP ',
-                            help='attack IP to classify flows', required=False)
-
         parser.parse_args()
         args = parser.parse_args()
-
-        Flow.ATTACKER_IP = args.attackerip
-        if args.attacks:
-            if not os.path.isfile(args.attacks):
-                print('"{}" does not exist'.format(args.attacks), file=sys.stderr)
-                sys.exit(-1)
-
-            with open(args.attacks) as f:
-                lines = f.readlines()
-            for line in lines:
-                if line.isspace():
-                    continue
-                paras = line.split(',')
-                Flow.ATTACKS.append([paras[0],
-                                     datetime.fromisoformat(paras[1].strip()).timestamp(),
-                                     datetime.fromisoformat(paras[2].strip()).timestamp()])
-        else:
-            args.attacks = False
 
         if not os.path.isfile(args.input):
             print('"{}" does not exist'.format(args.input), file=sys.stderr)
             sys.exit(-1)
 
-        Flow.generate_flows(args.input, args.output, args.interval, args.attacks, args.attackerip)
+        if args.attacks:
+            if not os.path.isfile(str(args.attacks)):
+                print('"{}" does not exist'.format(args.attacks), file=sys.stderr)
+                sys.exit(-1)
 
-    @classmethod
-    def generate_flows(cls, pcap_file, output_file, interval, attacks, attackerip):
-        logger_data = Flow.setup_logger(
-            output_file,
-            logging.Formatter('%(message)s'),
-            file_dir="./",
-            file_ext='.csv'
-        )
-        logger_detail = Flow.setup_logger(
-            output_file + "_details",
-            logging.Formatter('%(message)s'),
-            file_dir="./",
-            file_ext='.txt'
-        )
+            attacks = []
+            with open(str(args.attacks)) as f:
+                lines = f.readlines()
 
-        count = 0
-        Flow.HEADER_PRINTED = False
-        flow_dict = dict()
-
-        for (pkt_data, pkt_metadata,) in RawPcapReader(pcap_file):
-            count += 1
-            pkt_time = Flow.get_time(pkt_metadata)
-
-            if count == 1:
-                Flow.REFERENCE_TIME = pkt_time
-
-            ether_pkt = Ether(pkt_data)
-
-            if 'type' not in ether_pkt.fields:
-                # LLC frames will have 'len' instead of 'type'.
-                # We disregard those
-                logger_detail.info("Note: LLC frames Packet:{} on {}({})".format(count, Flow.format_time(pkt_time), pkt_time))
-                continue
-
-            if ether_pkt.type != 0x0800:
-                # disregard non-IPv4 packets
-                logger_detail.info("Note: non-IPv4 packets Packet:{} with type:{} on {}({})".format(count, ether_pkt.type, Flow.format_time(pkt_time), pkt_time))
-                print(ether_pkt.fields)
-                print (ether_pkt.dst)
-                if ether_pkt.type == 2054:
-                    arp_packet = ether_pkt[ARP]
-                    print (arp_packet.fields)
-                continue
-
-            ip_pkt = ether_pkt[IP]
-
-            s_ip = min(ip_pkt.src, ip_pkt.dst)
-            d_ip = max(ip_pkt.src, ip_pkt.dst)
-            proto = ip_pkt.proto
-
-            if not flow_dict.keys().__contains__((s_ip, d_ip, proto)):
-                packet_time = Flow.get_time(pkt_metadata)
-                flow_dict[(s_ip, d_ip, proto)] = Flow(s_ip, d_ip, proto, interval, packet_time, logger_data)
-
-            flow_dict[(s_ip, d_ip, proto)].add_packet(PacketParameter(ip_pkt, pkt_time, logger_detail))
-
-            if count % 1000 == 0:
-                print(count)
-
-        for flow in flow_dict.values():
-            flow.flush_flow()
-
-    @classmethod
-    def setup_logger(cls, name, format_str, level=logging.INFO, file_dir="./logs", file_ext=".log", write_mode="w"):
-        """To setup as many loggers as you want"""
-
-        """
-        logging.basicConfig(filename="./logs/log-" + self.__name +".log",
-                            format='[%(levelname)s] [%(asctime)s] %(message)s ',
-                            filemode='w')
-                            """
-        """To setup as many loggers as you want"""
-        file_path = os.path.join(file_dir, name) + file_ext
-        handler = logging.FileHandler(file_path, mode=write_mode)
-        handler.setFormatter(format_str)
-
-        # Let us Create an object
-        logger = logging.getLogger(name)
-
-        # Now we are going to Set the threshold of logger to DEBUG
-        logger.setLevel(level)
-        logger.addHandler(handler)
-        return logger
-
-    @classmethod
-    def get_time(cls, pkt_metadata):
-        return pkt_metadata.sec + pkt_metadata.usec/pow(10, 6)
-
-    @staticmethod
-    def format_decimal(value , rnd = 3):
-        return round(value, rnd)
-
-    @staticmethod
-    def avg(target):
-        if len(target) == 0:
-            return ''
+            lines.pop(0)
+            for line in lines:
+                if line.isspace():
+                    continue
+                paras = line.strip().split(',')
+                attacks.append([paras[0],
+                                datetime.fromisoformat(paras[3].strip()).timestamp(),
+                                datetime.fromisoformat(paras[4].strip()).timestamp(),
+                                paras[5],
+                                paras[6]]
+                               )
+            args.attacks = attacks
         else:
-            return Flow.format_decimal(sum(target) / len(target),6)
+            args.attacks = False
+        return args
 
-    def __init__(self, src, des, protocol, interval, first_stamp, logger):
-        self.src = src
-        self.des = des
+    @classmethod
+    def iterate_packets(cls):
+        count = 0
+        args = Flow.get_args()
+
+        for (pkt_data, pkt_metadata,) in RawPcapReader(args.input):
+            count += 1
+
+            if count % 10000 == 0:
+                print(count)
+        print(count)
+
+    def __init__(self, src, dst, protocol, interval, dataset):
+        self.src = min(src, dst)
+        self.des = max(src, dst)
         self.protocol = protocol
         self.interval = interval
-        self.logger = logger
+        self.dataset = dataset
+
         self.sen_list = []
         self.rec_list = []
         self.acc_sen_dic = dict()
         self.acc_rec_dic = dict()
         self.sen_delay = []
         self.rec_delay = []
+        self.src_ip_list = set()
+        self.dst_ip_list = set()
+        self.src_mac_list = set()
+        self.dst_mac_list = set()
 
     def reset(self):
-        self.sen_list = []
-        self.rec_list = []
-        self.acc_sen_dic = dict()
-        self.acc_rec_dic = dict()
-        self.sen_delay = []
-        self.rec_delay = []
+        self.__init__(self.src, self.des, self.protocol, self.interval, self.dataset)
+
+    def start_time(self):
+        s_start = sys.float_info.max
+        r_start = sys.float_info.max
+        if len(self.sen_list) != 0:
+            s_start = self.sen_list[0].packet_time
+        if len(self.rec_list) != 0:
+            r_start = self.rec_list[0].packet_time
+
+        return min(s_start, r_start)
+
+    def end_time(self):
+        s_end = 0
+        r_end = 0
+        if len(self.sen_list) != 0:
+            s_end = self.sen_list[-1].packet_time
+        if len(self.rec_list) != 0:
+            r_end = self.rec_list[-1].packet_time
+
+        return max(s_end, r_end)
+
+    def get_window(self):
+        return self.end_time() - self.start_time() + 0.000001
+
+    def is_empty(self):
+        return len(self.rec_list) == 0 and len(self.sen_list) == 0
 
     def add_packet(self, packet_parameter):
         if not self.can_append(packet_parameter.packet_time):
             self.flush_flow()
 
-        if packet_parameter.src == self.src:
+        if packet_parameter.get_src() == self.src:
             self.sen_list.append(packet_parameter)
         else:
             self.rec_list.append(packet_parameter)
 
         self.compute_delay(packet_parameter)
 
+        if packet_parameter.is_ip():
+            if packet_parameter.get_src() == self.src:
+                self.src_ip_list.add(packet_parameter.src_ip)
+                self.dst_ip_list.add(packet_parameter.dst_ip)
+                self.src_mac_list.add(packet_parameter.src_mac)
+                self.dst_mac_list.add(packet_parameter.dst_mac)
+            else:
+                self.src_ip_list.add(packet_parameter.dst_ip)
+                self.dst_ip_list.add(packet_parameter.src_ip)
+                self.src_mac_list.add(packet_parameter.dst_mac)
+                self.dst_mac_list.add(packet_parameter.src_mac)
+
+    def can_append(self, packet_time):
+        if self.is_empty():
+            return True
+
+        return self.start_time() + self.interval > packet_time
+
     def compute_delay(self, packet_parameter):
-        if packet_parameter.proto != 6:
+        if not packet_parameter.is_tcp():
             return
 
-        if packet_parameter.src == self.src:
+        if packet_parameter.get_src() == self.src:
             self.acc_sen_dic[packet_parameter.ack] = packet_parameter.packet_time
             if self.acc_rec_dic.keys().__contains__(packet_parameter.seq):
                 self.sen_delay.append(packet_parameter.packet_time - self.acc_rec_dic[packet_parameter.seq])
@@ -202,46 +205,89 @@ class Flow:
             if self.acc_sen_dic.keys().__contains__(packet_parameter.seq):
                 self.rec_delay.append(packet_parameter.packet_time - self.acc_sen_dic[packet_parameter.seq])
 
-    def start_time(self):
-        if len(self.rec_list) != 0 and len(self.sen_list) != 0:
-            return min(self.rec_list[0].packet_time , self.sen_list[0].packet_time)
-        elif len(self.sen_list) != 0:
-            return self.sen_list[0].packet_time
-        elif len(self.rec_list) != 0:
-            return self.rec_list[0].packet_time
-        else:
-            raise Exception('Should not end here.')
+    def flush_flow(self):
+        result = self.compute_parameters()
+        if not Flow.HEADER_PRINTED:
+            Flow.HEADER_PRINTED = True
+            self.dataset.info(','.join(result.keys()))
+        self.dataset.info(','.join(result.values()))
+        self.reset()
 
-    def end_time(self):
-        if len(self.rec_list) != 0 and len(self.sen_list) != 0:
-            return max(self.rec_list[-1].packet_time , self.sen_list[-1].packet_time)
-        elif len(self.sen_list) != 0:
-            return self.sen_list[-1].packet_time
-        elif len(self.rec_list) != 0:
-            return self.rec_list[-1].packet_time
-        else:
-            raise Exception('Should not end here.')
+    def compute_parameters(self):
+        res = dict()
 
-    def is_empty(self):
-        return len(self.rec_list) == 0 and len(self.sen_list) == 0
+        # flow features
+        res["sAddress"] = self.src
+        res["rAddress"] = self.des
+        res["sMACs"] = '/'.join(self.src_mac_list)
+        res["rMACs"] = '/'.join(self.dst_mac_list)
+        res["sIPs"] = '/'.join(self.src_ip_list)
+        res["rIPs"] = '/'.join(self.dst_ip_list)
+        res["Protocol"] = str(self.protocol)
 
-    def can_append(self, time):
-        if self.is_empty():
-            return True
+        # General features part 1
+        res["startDate"] = str(format_time(self.start_time()))
+        res["endDate"] = str(format_time(self.end_time()))
+        res["start"] = str(format_decimal(self.start_time(), 6))
+        res["end"] = str(format_decimal(self.end_time(), 6))
+        res["startOffset"] = str(format_decimal(self.start_time() - Flow.REFERENCE_TIME, 6))
+        res["endOffset"] = str(format_decimal(self.end_time() - Flow.REFERENCE_TIME, 6))
 
-        return self.start_time() + self.interval > time
+        self.compute_dual_parameters('s', self.sen_list, res)
+        self.compute_dual_parameters('r', self.rec_list, res)
 
+        # TCP features part 2
+        res["sAckDelay"] = str(average(self.sen_delay))
+        res["rAckDelay"] = str(average(self.rec_delay))
+        res["sMaxAckDelay"] = str(maximum(self.sen_delay))
+        res["rMaxAckDelay"] = str(maximum(self.rec_delay))
 
+        it_b_label = '0'
+        it_m_label = 'Normal'
+        nst_b_label = '0'
+        nst_m_label = 'Normal'
 
+        if Flow.Attacks:
+            for i in range(len(Flow.Attacks)):
+                if not (Flow.Attacks[i][1] >= self.end_time() or Flow.Attacks[i][2] <= self.start_time()):
+                    it_b_label = 1
+                    it_m_label = Flow.Attacks[i][0]
+                    attacker_mac = Flow.Attacks[i][3]
+                    attacker_ip = Flow.Attacks[i][4]
+                    if attacker_mac in self.src_mac_list or \
+                            attacker_mac in self.dst_mac_list or \
+                            attacker_ip in self.src_mac_list or \
+                            attacker_ip in self.dst_mac_list:
+                        nst_b_label = 1
+                        nst_m_label = Flow.Attacks[i][0]
 
+            res["IT-B-Label"] = it_b_label
+            res["IT-M-Label"] = it_m_label
+            res["NST-B-Label"] = nst_b_label
+            res["NST-M-Label"] = nst_m_label
 
+        return res
 
-    def get_window(self):
-        return self.end_time() - self.start_time() + 0.000001
+    def compute_dual_parameters(self, prefix, target, res):
+        # General features part 2
+        res[prefix + "Packets"] = str(Flow.packets_cnt(target))
+        res[prefix + "Bytes"] = str(Flow.packets_bytes_sum(target))
+        res[prefix + "BytesAvg"] = str(Flow.packets_bytes_avg(target))
+        res[prefix + "Load"] = str(self.load(target))
+        res[prefix + "Payload"] = str(Flow.payload_sum(target))
+        res[prefix + "PayloadAvg"] = str(Flow.payload_avg(target))
+        res[prefix + "InterPacket"] = str(Flow.inter_packets_avg(target))
 
-    @staticmethod
-    def format_time(value):
-        return str(datetime.fromtimestamp(value))
+        # TCP features Part 1
+        res[prefix + "ttl"] = str(Flow.ttl_avg(target))
+        res[prefix + "AckRate"] = str(Flow.flag_rate(target, 'A'))
+        res[prefix + "FinRate"] = str(Flow.flag_rate(target, 'F'))
+        res[prefix + "PshRate"] = str(Flow.flag_rate(target, 'P'))
+        res[prefix + "SynRate"] = str(Flow.flag_rate(target, 'S'))
+        res[prefix + "UrgRate"] = str(Flow.flag_rate(target, 'U'))
+        res[prefix + "RstRate"] = str(Flow.flag_rate(target, 'R'))
+        res[prefix + "WinTCP"] = str(Flow.tcp_window_avg(target))
+        res[prefix + "FragmentRate"] = str(Flow.fragmentation_rate(target))
 
     @staticmethod
     def packets_cnt(packets):
@@ -249,7 +295,7 @@ class Flow:
 
     @staticmethod
     def packets_bytes_sum(packets):
-        return sum([pkt.lenght for pkt in packets])
+        return sum([pkt.length for pkt in packets])
 
     @staticmethod
     def packets_bytes_avg(packets):
@@ -257,7 +303,7 @@ class Flow:
             return ''
         else:
             value = Flow.packets_bytes_sum(packets) / Flow.packets_cnt(packets)
-            return Flow.format_decimal(Flow.format_decimal(value))
+            return format_decimal(format_decimal(value))
 
     @staticmethod
     def payload_sum(packets):
@@ -268,28 +314,44 @@ class Flow:
         if Flow.packets_cnt(packets) == 0:
             return ''
         else:
-            return Flow.format_decimal(sum([pkt.payload for pkt in packets]) / Flow.packets_cnt(packets))
+            return format_decimal(sum([pkt.payload for pkt in packets]) / Flow.packets_cnt(packets))
+
+    @staticmethod
+    def inter_packets_avg(packets):
+        if Flow.packets_cnt(packets) == 0:
+            return ''
+
+        if Flow.packets_cnt(packets) == 1:
+            return ''
+
+        return (packets[-1].packet_time - packets[0].packet_time) / (Flow.packets_cnt(packets) - 1)
 
     @staticmethod
     def ttl_avg(packets):
+
         if Flow.packets_cnt(packets) == 0:
+            return ''
+        if not packets[0].is_tcp():
+            return ''
+
+        if not packets[0].is_ip():
             return ''
         else:
             value = sum([pkt.ttl for pkt in packets]) / Flow.packets_cnt(packets)
-            return Flow.format_decimal(Flow.format_decimal(value))
+            return format_decimal(value)
 
     @staticmethod
     def flag_rate(packets, flag):
         if Flow.packets_cnt(packets) == 0:
             return ''
-        if packets[0].proto != 6:
+        if not packets[0].is_tcp():
             return ''
 
         value = 0
 
         match flag:
             case 'A':
-                value =  sum([int(pkt.flags.A) for pkt in packets]) / Flow.packets_cnt(packets)
+                value = sum([int(pkt.flags.A) for pkt in packets]) / Flow.packets_cnt(packets)
             case 'U':
                 value = sum([int(pkt.flags.U) for pkt in packets]) / Flow.packets_cnt(packets)
             case 'S':
@@ -303,79 +365,30 @@ class Flow:
             case _:
                 raise Exception('Should not end here.')
 
-        return Flow.format_decimal(value)
-
+        return format_decimal(value)
 
     @staticmethod
     def tcp_window_avg(packets):
         if Flow.packets_cnt(packets) == 0:
             return ''
-        if packets[0].proto != 6:
+        if not packets[0].is_tcp():
             return ''
 
-        return Flow.format_decimal(sum([pkt.window for pkt in packets]) / Flow.packets_cnt(packets))
+        return format_decimal(sum([pkt.window for pkt in packets]) / Flow.packets_cnt(packets))
 
     @staticmethod
     def fragmentation_rate(packets):
+
         if Flow.packets_cnt(packets) == 0:
+            return ''
+        if not packets[0].is_ip():
             return ''
 
         return sum([int(pkt.fragment) for pkt in packets]) / Flow.packets_cnt(packets)
 
     def load(self, packets):
         value = Flow.packets_bytes_sum(packets) * 8 / self.get_window()
-        return Flow.format_decimal(value)
-
-    def flush_flow(self):
-        result = self.compute_parameters()
-
-        if not Flow.HEADER_PRINTED:
-            Flow.HEADER_PRINTED = True
-            self.logger.info(','.join(result.keys()))
-        self.logger.info(','.join(result.values()))
-        self.reset()
-
-    def compute_parameters(self):
-        res = dict()
-        res["Source"] = self.src
-        res["Destination"] = self.des
-        res["Protocol"] = str(self.protocol)
-        res["FirstDate"] = str(Flow.format_time(self.start_time()))
-        res["LastDate"] = str(Flow.format_time(self.end_time()))
-        res["FirstStamp"] = str(Flow.format_decimal(self.start_time() - Flow.REFERENCE_TIME,6))
-        res["LastStamp"] = str(Flow.format_decimal(self.end_time() - Flow.REFERENCE_TIME ,6))
-        res["FirstOridinalStamp"] = str(Flow.format_decimal(self.start_time(),6))
-        res["LastOridinalStamp"] = str(Flow.format_decimal(self.end_time(), 6 ))
-        self.compute_dual_parameters('Sen', self.sen_list, res)
-        self.compute_dual_parameters('Rec', self.rec_list, res)
-        res["Sen_AckDelay"] = str(Flow.avg(self.sen_delay))
-        res["Rec_AckDelay"] = str(Flow.avg(self.rec_delay))
-
-        if Flow.ATTACKS:
-            class_label = 'Normal'
-            if not Flow.ATTACKER_IP or (self.src == Flow.ATTACKER_IP or self.des == Flow.ATTACKER_IP):
-                for i in range(len(Flow.ATTACKS)):
-                    if not (Flow.ATTACKS[i][1]>= self.end_time() or Flow.ATTACKS[i][2]<= self.start_time()):
-                        class_label = Flow.ATTACKS[i][0]
-            res["class"] = class_label
-        return res
-
-    def compute_dual_parameters(self, prefix, target, res):
-        res[prefix + "PacketsCount"] = str(Flow.packets_cnt(target))
-        res[prefix + "BytesSum"] = str(Flow.packets_bytes_sum(target))
-        res[prefix + "BytesAvg"] = str(Flow.packets_bytes_avg(target))
-        res[prefix + "PayloadSum"] = str(Flow.payload_sum(target))
-        res[prefix + "PayloadAvg"] = str(Flow.payload_avg(target))
-        res[prefix + "Load"] = str(self.load(target))
-        res[prefix + "TtlAvg"] = str(Flow.ttl_avg(target))
-        res[prefix + "AckRate"] = str(Flow.flag_rate(target,'A'))
-        res[prefix + "FinRate"] = str(Flow.flag_rate(target, 'F'))
-        res[prefix + "PshRate"] = str(Flow.flag_rate(target, 'P'))
-        res[prefix + "SynRate"] = str(Flow.flag_rate(target, 'S'))
-        res[prefix + "UrgRate"] = str(Flow.flag_rate(target, 'U'))
-        res[prefix + "RstRate"] = str(Flow.flag_rate(target, 'R'))
-        res[prefix + "TcpWindowAvg"] = str(Flow.tcp_window_avg(target))
-        res[prefix + "FragmentRate"] = str(Flow.fragmentation_rate(target))
+        return format_decimal(value)
 
 
 if __name__ == '__main__':

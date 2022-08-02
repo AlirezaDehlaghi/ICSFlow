@@ -19,13 +19,13 @@ def setup_logger( name, format_str, level=logging.INFO, file_dir="./logs", file_
     # Let us Create an object
     logger = logging.getLogger(name)
 
-    # Now we are going to Set the threshold of logger to DEBUG
+    # Now we are going to Set the threshold of dataset to DEBUG
     logger.setLevel(level)
     logger.addHandler(handler)
     return logger
 
 
-def get_time( pkt_metadata):
+def get_packet_time(pkt_metadata):
     return pkt_metadata.sec + pkt_metadata.usec / pow(10, 6)
 
 
@@ -33,12 +33,22 @@ def format_decimal(value, rnd=3):
     return round(value, rnd)
 
 
-def avg(target):
+def format_time(value):
+    return str(datetime.fromtimestamp(value))
+
+
+def average(target):
     if len(target) == 0:
         return ''
     else:
         return format_decimal(sum(target) / len(target), 6)
 
 
-def format_time(value):
-    return str(datetime.fromtimestamp(value))
+def maximum(target):
+    if len(target) == 0:
+        return ''
+    else:
+        return format_decimal(max(target))
+
+
+
