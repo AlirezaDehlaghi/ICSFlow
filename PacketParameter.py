@@ -36,7 +36,7 @@ class PacketParameter:
             else:
                 self.payload = 0
                 self.protocol_name = "IPV4:" + str(self.proto)
-                logger.error("Packet parameter is computing for non TCP and UDP packet.")
+                logger.error("Packet parameter is computing for non TCP and UDP packet type (time = {}).".format(pkt_time))
 
         elif self.is_arp():
             self.payload = self.length - 4

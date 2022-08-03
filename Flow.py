@@ -174,17 +174,18 @@ class Flow:
 
         self.compute_delay(packet_parameter)
 
-        if packet_parameter.is_ip():
-            if packet_parameter.get_src() == self.src:
+        if packet_parameter.get_src() == self.src:
+            self.src_mac_list.add(packet_parameter.src_mac)
+            self.dst_mac_list.add(packet_parameter.dst_mac)
+            if packet_parameter.is_ip():
                 self.src_ip_list.add(packet_parameter.src_ip)
                 self.dst_ip_list.add(packet_parameter.dst_ip)
-                self.src_mac_list.add(packet_parameter.src_mac)
-                self.dst_mac_list.add(packet_parameter.dst_mac)
-            else:
+        else:
+            self.src_mac_list.add(packet_parameter.dst_mac)
+            self.dst_mac_list.add(packet_parameter.src_mac)
+            if packet_parameter.is_ip():
                 self.src_ip_list.add(packet_parameter.dst_ip)
                 self.dst_ip_list.add(packet_parameter.src_ip)
-                self.src_mac_list.add(packet_parameter.dst_mac)
-                self.dst_mac_list.add(packet_parameter.src_mac)
 
     def can_append(self, packet_time):
         if self.is_empty():
@@ -250,15 +251,16 @@ class Flow:
         if Flow.Attacks:
             for i in range(len(Flow.Attacks)):
                 if not (Flow.Attacks[i][1] >= self.end_time() or Flow.Attacks[i][2] <= self.start_time()):
-                    it_b_label = 1
+                    it_b_label = '1'
                     it_m_label = Flow.Attacks[i][0]
+
                     attacker_mac = Flow.Attacks[i][3]
                     attacker_ip = Flow.Attacks[i][4]
                     if attacker_mac in self.src_mac_list or \
                             attacker_mac in self.dst_mac_list or \
-                            attacker_ip in self.src_mac_list or \
-                            attacker_ip in self.dst_mac_list:
-                        nst_b_label = 1
+                            attacker_ip in self.src_ip_list or \
+                            attacker_ip in self.dst_ip_list:
+                        nst_b_label = '1'
                         nst_m_label = Flow.Attacks[i][0]
 
             res["IT-B-Label"] = it_b_label
