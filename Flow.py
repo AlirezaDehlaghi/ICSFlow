@@ -263,10 +263,10 @@ class Flow:
                         nst_b_label = '1'
                         nst_m_label = Flow.Attacks[i][0]
 
-            res["IT-B-Label"] = it_b_label
-            res["IT-M-Label"] = it_m_label
-            res["NST-B-Label"] = nst_b_label
-            res["NST-M-Label"] = nst_m_label
+            res["IT_B_Label"] = it_b_label
+            res["IT_M_Label"] = it_m_label
+            res["NST_B_Label"] = nst_b_label
+            res["NST_M_Label"] = nst_m_label
 
         return res
 
