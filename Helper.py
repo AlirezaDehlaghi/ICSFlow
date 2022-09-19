@@ -50,5 +50,11 @@ def maximum(target):
     else:
         return format_decimal(max(target))
 
+def minimum(target):
+    if len(target) == 0:
+        return ''
+    else:
+        return format_decimal(min(target))
+
 
 

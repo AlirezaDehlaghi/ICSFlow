@@ -1,7 +1,7 @@
 import argparse
 from scapy.layers.l2 import Ether
 from scapy.all import *
-from Helper import setup_logger, get_packet_time, format_time, format_decimal, average, maximum
+from Helper import setup_logger, get_packet_time, format_time, format_decimal, average, maximum, minimum
 from PacketParameter import PacketParameter
 
 
@@ -59,6 +59,8 @@ class Flow:
         for flow in flow_dict.values():
             flow.flush_flow()
 
+        print(count)
+
     @classmethod
     def get_args(cls):
         parser = argparse.ArgumentParser(description='PCAP reader')
@@ -94,8 +96,10 @@ class Flow:
                     continue
                 paras = line.strip().split(',')
                 attacks.append([paras[0],
-                                datetime.fromisoformat(paras[3].strip()).timestamp(),
-                                datetime.fromisoformat(paras[4].strip()).timestamp(),
+                                float(paras[1].strip()),
+                                float(paras[2].strip()),
+                                #datetime.fromisoformat(paras[3].strip()).timestamp(),
+                                #datetime.fromisoformat(paras[4].strip()).timestamp(),
                                 paras[5],
                                 paras[6]]
                                )
@@ -207,23 +211,27 @@ class Flow:
                 self.rec_delay.append(packet_parameter.packet_time - self.acc_sen_dic[packet_parameter.seq])
 
     def flush_flow(self):
-        result = self.compute_parameters()
+        result = self.compute_parameters
         if not Flow.HEADER_PRINTED:
             Flow.HEADER_PRINTED = True
             self.dataset.info(','.join(result.keys()))
         self.dataset.info(','.join(result.values()))
         self.reset()
 
+    @property
     def compute_parameters(self):
         res = dict()
 
         # flow features
         res["sAddress"] = self.src
         res["rAddress"] = self.des
+
         res["sMACs"] = '/'.join(self.src_mac_list)
         res["rMACs"] = '/'.join(self.dst_mac_list)
+
         res["sIPs"] = '/'.join(self.src_ip_list)
         res["rIPs"] = '/'.join(self.dst_ip_list)
+
         res["Protocol"] = str(self.protocol)
 
         # General features part 1
@@ -234,14 +242,75 @@ class Flow:
         res["startOffset"] = str(format_decimal(self.start_time() - Flow.REFERENCE_TIME, 6))
         res["endOffset"] = str(format_decimal(self.end_time() - Flow.REFERENCE_TIME, 6))
 
-        self.compute_dual_parameters('s', self.sen_list, res)
-        self.compute_dual_parameters('r', self.rec_list, res)
+        res["duration"] = str(format_decimal(self.get_window(), 6))
+
+        res["sPackets"] = str(Flow.packets_cnt(self.sen_list))
+        res["rPackets"] = str(Flow.packets_cnt(self.rec_list))
+
+        res["sBytesMax"] = str(Flow.packets_bytes_max(self.sen_list))
+        res["rBytesMax"] = str(Flow.packets_bytes_max(self.rec_list))
+
+        res["sBytesMin"] = str(Flow.packets_bytes_min(self.sen_list))
+        res["rBytesMin"] = str(Flow.packets_bytes_min(self.rec_list))
+
+        res["sBytesAvg"] = str(Flow.packets_bytes_avg(self.sen_list))
+        res["rBytesAvg"] = str(Flow.packets_bytes_avg(self.rec_list))
+
+        res["sLoad"] = str(self.load(self.sen_list))
+        res["rLoad"] = str(self.load(self.rec_list))
+
+        res["sPayloadMax"] = str(Flow.payload_max(self.sen_list))
+        res["rPayloadMax"] = str(Flow.payload_max(self.rec_list))
+
+        res["sPayloadMin"] = str(Flow.payload_min(self.sen_list))
+        res["rPayloadMin"] = str(Flow.payload_min(self.rec_list))
+
+        res["sPayloadAvg"] = str(Flow.payload_avg(self.sen_list))
+        res["rPayloadAvg"] = str(Flow.payload_avg(self.rec_list))
+
+        res["sInterPacketAvg"] = str(Flow.inter_packets_avg(self.sen_list))
+        res["rInterPacketAvg"] = str(Flow.inter_packets_avg(self.rec_list))
+
+        # TCP features Part 1
+        res["sttl"] = str(Flow.ttl_avg(self.sen_list))
+        res["rttl"] = str(Flow.ttl_avg(self.rec_list))
+
+        res["sAckRate"] = str(Flow.flag_rate(self.sen_list, 'A'))
+        res["rAckRate"] = str(Flow.flag_rate(self.rec_list, 'A'))
+
+        res["sFinRate"] = str(Flow.flag_rate(self.sen_list, 'F'))
+        res["rFinRate"] = str(Flow.flag_rate(self.rec_list, 'F'))
+
+        res["sPshRate"] = str(Flow.flag_rate(self.sen_list, 'P'))
+        res["rPshRate"] = str(Flow.flag_rate(self.rec_list, 'P'))
+
+        res["sSynRate"] = str(Flow.flag_rate(self.sen_list, 'S'))
+        res["rSynRate"] = str(Flow.flag_rate(self.rec_list, 'S'))
+
+        res["sSynRate"] = str(Flow.flag_rate(self.sen_list, 'S'))
+        res["rSynRate"] = str(Flow.flag_rate(self.rec_list, 'S'))
+
+        res["sRstRate"] = str(Flow.flag_rate(self.sen_list, 'R'))
+        res["rRstRate"] = str(Flow.flag_rate(self.rec_list, 'R'))
+
+        res["sWinTCP"] = str(Flow.tcp_window_avg(self.sen_list))
+        res["rWinTCP"] = str(Flow.tcp_window_avg(self.rec_list))
+
+        res["sFragmentRate"] = str(Flow.fragmentation_rate(self.sen_list))
+        res["rFragmentRate"] = str(Flow.fragmentation_rate(self.rec_list))
+
 
         # TCP features part 2
-        res["sAckDelay"] = str(average(self.sen_delay))
-        res["rAckDelay"] = str(average(self.rec_delay))
-        res["sMaxAckDelay"] = str(maximum(self.sen_delay))
-        res["rMaxAckDelay"] = str(maximum(self.rec_delay))
+
+        res["sAckDelayMax"] = str(maximum(self.sen_delay))
+        res["rAckDelayMax"] = str(maximum(self.rec_delay))
+
+        res["sAckDelayMin"] = str(minimum(self.sen_delay))
+        res["rAckDelayMin"] = str(minimum(self.rec_delay))
+
+        res["sAckDelayAvg"] = str(average(self.sen_delay))
+        res["rAckDelayAvg"] = str(average(self.rec_delay))
+
 
         it_b_label = '0'
         it_m_label = 'Normal'
@@ -270,26 +339,14 @@ class Flow:
 
         return res
 
-    def compute_dual_parameters(self, prefix, target, res):
-        # General features part 2
-        res[prefix + "Packets"] = str(Flow.packets_cnt(target))
-        res[prefix + "Bytes"] = str(Flow.packets_bytes_sum(target))
-        res[prefix + "BytesAvg"] = str(Flow.packets_bytes_avg(target))
-        res[prefix + "Load"] = str(self.load(target))
-        res[prefix + "Payload"] = str(Flow.payload_sum(target))
-        res[prefix + "PayloadAvg"] = str(Flow.payload_avg(target))
-        res[prefix + "InterPacket"] = str(Flow.inter_packets_avg(target))
 
-        # TCP features Part 1
-        res[prefix + "ttl"] = str(Flow.ttl_avg(target))
-        res[prefix + "AckRate"] = str(Flow.flag_rate(target, 'A'))
-        res[prefix + "FinRate"] = str(Flow.flag_rate(target, 'F'))
-        res[prefix + "PshRate"] = str(Flow.flag_rate(target, 'P'))
-        res[prefix + "SynRate"] = str(Flow.flag_rate(target, 'S'))
-        res[prefix + "UrgRate"] = str(Flow.flag_rate(target, 'U'))
-        res[prefix + "RstRate"] = str(Flow.flag_rate(target, 'R'))
-        res[prefix + "WinTCP"] = str(Flow.tcp_window_avg(target))
-        res[prefix + "FragmentRate"] = str(Flow.fragmentation_rate(target))
+
+
+
+
+
+
+
 
     @staticmethod
     def packets_cnt(packets):
@@ -308,8 +365,33 @@ class Flow:
             return format_decimal(format_decimal(value))
 
     @staticmethod
+    def packets_bytes_max(packets):
+        if Flow.packets_cnt(packets) == 0:
+            return ''
+        else:
+            return maximum([pkt.length for pkt in packets])
+
+    @staticmethod
+    def packets_bytes_min(packets):
+        if Flow.packets_cnt(packets) == 0:
+            return ''
+        else:
+            return min([pkt.length for pkt in packets])
+
+    @staticmethod
     def payload_sum(packets):
         return sum([pkt.payload for pkt in packets])
+
+    @staticmethod
+    def payload_max(packets):
+        return maximum([pkt.payload for pkt in packets])
+
+    @staticmethod
+    def payload_min(packets):
+        if Flow.packets_cnt(packets) == 0:
+            return ''
+        else:
+            return min([pkt.payload for pkt in packets])
 
     @staticmethod
     def payload_avg(packets):

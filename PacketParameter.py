@@ -26,21 +26,29 @@ class PacketParameter:
                 self.window = tcp_pkt.window
                 self.ack = tcp_pkt.ack
                 self.seq = tcp_pkt.seq
-                self.protocol_name = "IPV4:TCP"
+                self.protocol_name = "IPV4-TCP"
 
             elif self.is_udp():  # udp
                 udp_pkt = ip_pkt[UDP]
                 self.payload = ip_pkt.len - (ip_pkt.ihl * 4) - (8 * 4)  # UDP header size is always 8
-                self.protocol_name = "IPV4:UDP"
+                self.protocol_name = "IPV4-UDP"
+
+            elif self.is_icmp():  # icmp
+                self.payload = ip_pkt.len - (ip_pkt.ihl * 4) - (8 * 4)  # ICMP header size is always 8
+                self.protocol_name = "IPV4-ICMP"
 
             else:
-                self.payload = 0
-                self.protocol_name = "IPV4:" + str(self.proto)
+                self.payload = self.payload = ip_pkt.len - (ip_pkt.ihl * 4) - (8 * 4)  # default is 8 bytes
+                self.protocol_name = "IPV4-" + str(self.proto)
                 logger.error("Packet parameter is computing for non TCP and UDP packet type (time = {}).".format(pkt_time))
 
         elif self.is_arp():
             self.payload = self.length - 4
             self.protocol_name = "ARP"
+
+        elif self.is_ipv6():
+            self.payload = self.length - 4
+            self.protocol_name = "IPV6"
 
         else:
             self.payload = self.length - 4
@@ -52,6 +60,12 @@ class PacketParameter:
 
     def is_arp(self):
         return self.type == 2054
+
+    def is_ipv6(self):
+        return self.type == 34525
+
+    def is_icmp(self):
+        return self.is_ip() and self.proto == 1
 
     def is_tcp(self):
         return self.is_ip() and self.proto == 6
