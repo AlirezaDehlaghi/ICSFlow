@@ -278,6 +278,9 @@ class Flow:
         res["sAckRate"] = str(Flow.flag_rate(self.sen_list, 'A'))
         res["rAckRate"] = str(Flow.flag_rate(self.rec_list, 'A'))
 
+        res["sUrgRate"] = str(Flow.flag_rate(self.sen_list, 'U'))
+        res["rUrgRate"] = str(Flow.flag_rate(self.rec_list, 'U'))
+
         res["sFinRate"] = str(Flow.flag_rate(self.sen_list, 'F'))
         res["rFinRate"] = str(Flow.flag_rate(self.rec_list, 'F'))
 
