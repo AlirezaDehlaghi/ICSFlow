@@ -67,7 +67,7 @@ class Flow:
         parser.add_argument('--input', metavar='<pcap file name>',
                             help='pcap file to parse', required=True)
         parser.add_argument('--output', metavar='<csv file name>',
-                            help='csv file to ouput', required=True)
+                            help='csv file to output', required=True)
         parser.add_argument('--interval', metavar='interval in seconds', type=float, default=0.5,
                             help='interval to compute flows', required=False)
 
@@ -98,8 +98,8 @@ class Flow:
                 attacks.append([paras[0],
                                 float(paras[1].strip()),
                                 float(paras[2].strip()),
-                                #datetime.fromisoformat(paras[3].strip()).timestamp(),
-                                #datetime.fromisoformat(paras[4].strip()).timestamp(),
+                                # datetime.fromisoformat(paras[3].strip()).timestamp(),
+                                # datetime.fromisoformat(paras[4].strip()).timestamp(),
                                 paras[5],
                                 paras[6]]
                                )
@@ -232,7 +232,7 @@ class Flow:
         res["sIPs"] = '/'.join(self.src_ip_list)
         res["rIPs"] = '/'.join(self.dst_ip_list)
 
-        res["Protocol"] = str(self.protocol)
+        res["protocol"] = str(self.protocol)
 
         # General features part 1
         res["startDate"] = str(format_time(self.start_time()))
@@ -247,6 +247,10 @@ class Flow:
         res["sPackets"] = str(Flow.packets_cnt(self.sen_list))
         res["rPackets"] = str(Flow.packets_cnt(self.rec_list))
 
+        # We have to remove this feature
+        res["sBytesSum"] = str(Flow.packets_bytes_sum(self.sen_list))
+        res["rBytesSum"] = str(Flow.packets_bytes_sum(self.rec_list))
+
         res["sBytesMax"] = str(Flow.packets_bytes_max(self.sen_list))
         res["rBytesMax"] = str(Flow.packets_bytes_max(self.rec_list))
 
@@ -258,6 +262,10 @@ class Flow:
 
         res["sLoad"] = str(self.load(self.sen_list))
         res["rLoad"] = str(self.load(self.rec_list))
+
+        # We have to remove this feature
+        res["sPayloadSum"] = str(Flow.payload_sum(self.sen_list))
+        res["rPayloadSum"] = str(Flow.payload_sum(self.rec_list))
 
         res["sPayloadMax"] = str(Flow.payload_max(self.sen_list))
         res["rPayloadMax"] = str(Flow.payload_max(self.rec_list))
@@ -302,7 +310,6 @@ class Flow:
         res["sFragmentRate"] = str(Flow.fragmentation_rate(self.sen_list))
         res["rFragmentRate"] = str(Flow.fragmentation_rate(self.rec_list))
 
-
         # TCP features part 2
 
         res["sAckDelayMax"] = str(maximum(self.sen_delay))
@@ -313,7 +320,6 @@ class Flow:
 
         res["sAckDelayAvg"] = str(average(self.sen_delay))
         res["rAckDelayAvg"] = str(average(self.rec_delay))
-
 
         it_b_label = '0'
         it_m_label = 'Normal'
@@ -341,15 +347,6 @@ class Flow:
             res["NST_M_Label"] = nst_m_label
 
         return res
-
-
-
-
-
-
-
-
-
 
     @staticmethod
     def packets_cnt(packets):
