@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+# This is help
 
 def setup_logger( name, format_str, level=logging.INFO, file_dir="./logs", file_ext=".log", write_mode="w"):
     """To setup as many loggers as you want"""
