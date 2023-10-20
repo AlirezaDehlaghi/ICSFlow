@@ -68,8 +68,8 @@ class FlowExtractor:
     def read_pcap_file(self):
         for (pkt_data, pkt_metadata,) in RawPcapReader(self.source):
             self.process_packets(pkt_data, get_packet_time(pkt_metadata))
-            if self.packet_count > 3000:
-                break
+            # if self.packet_count > 3000:
+            #     break
 
         while not self.processing_queue.empty():
             self.flush_first_flow()

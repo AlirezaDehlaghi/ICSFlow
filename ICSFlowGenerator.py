@@ -107,13 +107,13 @@ class ICSFlowGenerator:
                 self.flow_sender.send(flow)
 
     def run(self):
-        # self.sniffer_thread.start()
-        # self.sender_thread.start()
-        # self.sniffer_thread.join()
-        # self.read_finished_flag = True
-        # self.sender_thread.join()
-        self.generate_flows()
-        self.record_flows()
+        self.sniffer_thread.start()
+        self.sender_thread.start()
+        self.sniffer_thread.join()
+        self.read_finished_flag = True
+        self.sender_thread.join()
+        # self.generate_flows()
+        # self.record_flows()
 
 
 if __name__ == '__main__':
