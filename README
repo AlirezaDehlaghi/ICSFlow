@@ -1,3 +1,0 @@
-## run this project with following arguments:
-
---input data/traffic.pcap --output data/file --attackerip 192.168.0.41 --attacks data/log_summary.csv

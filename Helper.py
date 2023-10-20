@@ -4,6 +4,7 @@ from datetime import datetime
 
 # This is help for you
 
+
 def setup_logger( name, format_str, level=logging.INFO, file_dir="./logs", file_ext=".log", write_mode="w"):
     """To setup as many loggers as you want"""
 
@@ -50,6 +51,7 @@ def maximum(target):
         return ''
     else:
         return format_decimal(max(target))
+
 
 def minimum(target):
     if len(target) == 0:
