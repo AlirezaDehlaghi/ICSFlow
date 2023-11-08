@@ -8,9 +8,9 @@ from AgentExtractor import AgentExtractor
 from AgentAnotator import AgentAnnotator
 from FlowGeneratorActions import FlowGeneratorActions
 from AgentSender import AgentSender
+from version import __version__
 
-
-from Helper import  setup_logger
+from Helper import setup_logger
 
 import queue
 
