@@ -17,7 +17,6 @@ import queue
 
 class ICSFlowGenerator:
 
-    __version__ == "2.0.2"
 
     @staticmethod
     def get_args():
