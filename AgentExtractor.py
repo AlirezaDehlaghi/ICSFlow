@@ -22,6 +22,7 @@ class AgentExtractor:
         self.event_logger = logger
 
     def process_packets(self, pkt_data, pkt_time):
+
         if self.packet_count == 0:
             Flow.REFERENCE_TIME = pkt_time
 
@@ -29,14 +30,11 @@ class AgentExtractor:
             self.flush_first_flow()
 
         self.packet_count = self.packet_count + 1
-
         ether_pkt = Ether(pkt_data)
-
         if 'type' not in ether_pkt.fields:
             self.event_logger.info(
                 "Note: LLC frames Packet:{} on {}({})".format(self.packet_count, format_time(pkt_time), pkt_time))
             return
-
         packet_para = PacketParameter(ether_pkt, pkt_time, self.event_logger)
         flow_src = min(packet_para.get_src(), packet_para.get_dst())
         flow_dst = max(packet_para.get_src(), packet_para.get_dst())
@@ -50,7 +48,7 @@ class AgentExtractor:
 
         self.processing_dict[key].add_packet(packet_para)
 
-        if self.packet_count % 1000 == 0:
+        if self.packet_count % 100 == 0:
             self.report_progress()
 
     def report_progress(self):
@@ -62,7 +60,8 @@ class AgentExtractor:
         flow.compute_parameters()
         self.output_queue.put(flow)
 
-    def __packet_handler(self, pkt):
+    def packet_handler(self, pkt):
+        print(".")
         self.process_packets(pkt, pkt.time)
 
     def __read_pcap_file(self):
@@ -79,6 +78,6 @@ class AgentExtractor:
 
     def extract(self):
         if self.action == FlowGeneratorActions.SNIFF:
-            sniff(self.source, self.__packet_handler)
+            sniff(iface = self.source, prn = self.packet_handler)
         elif self.action == FlowGeneratorActions.CONVERT:
             self.__read_pcap_file()
