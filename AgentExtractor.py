@@ -61,9 +61,6 @@ class AgentExtractor:
         self.output_queue.put(flow)
 
     def packet_handler(self, pkt):
-
-        if self.packet_count % 10 == 0:
-            print(".")
         self.process_packets(pkt, pkt.time)
 
     def __read_pcap_file(self):

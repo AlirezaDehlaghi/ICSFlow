@@ -120,13 +120,17 @@ To parse input arguments:
         self.reader_thread_terminated = True
 
     def send_flows(self):
+        counter = 0
         while not self.flow_queue.empty() or (not self.reader_thread_terminated):
             if self.flow_queue.empty():
                 time.sleep(2)
             else:
+                counter += 1
                 flow = self.flow_queue.get()
                 self.agent_annotator.annotate(flow)
                 self.agent_sender.send(flow)
+                if counter % 100 == 0:
+                    print("{} flows sent. ({} flows in the queue) ".format(counter, self.flow_queue.qsize()))
 
     def run(self):
         self.reader_thread.start()
