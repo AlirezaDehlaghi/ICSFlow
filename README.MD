@@ -40,7 +40,7 @@ options:
 ## Sample runtime arguments
 1) sniffing from lan without annotation:
 ```
-sniff --source   eth0   --interval   0.5   --target_file   output/sniffed.csv 
+sniff --source   Wi-Fi   --interval   0.5   --target_file   output/sniffed.csv 
 ```
 
 2) offline genering of network flows from PCAP file with True label annotation:

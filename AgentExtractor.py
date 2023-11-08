@@ -21,7 +21,7 @@ class AgentExtractor:
         self.packet_count = 0
         self.event_logger = logger
 
-    def process_packets(self, pkt_data, pkt_time):
+    def process_packets(self, ether_pkt, pkt_time):
 
         if self.packet_count == 0:
             Flow.REFERENCE_TIME = pkt_time
@@ -30,7 +30,7 @@ class AgentExtractor:
             self.flush_first_flow()
 
         self.packet_count = self.packet_count + 1
-        ether_pkt = Ether(pkt_data)
+
         if 'type' not in ether_pkt.fields:
             self.event_logger.info(
                 "Note: LLC frames Packet:{} on {}({})".format(self.packet_count, format_time(pkt_time), pkt_time))
@@ -61,7 +61,8 @@ class AgentExtractor:
         self.output_queue.put(flow)
 
     def packet_handler(self, pkt):
-        if self.packet_count % 100 == 0:
+
+        if self.packet_count % 10 == 0:
             print(".")
         self.process_packets(pkt, pkt.time)
 
@@ -69,7 +70,8 @@ class AgentExtractor:
 
         # read packets from the file
         for (pkt_data, pkt_metadata,) in RawPcapReader(self.source):
-            self.process_packets(pkt_data, get_packet_time(pkt_metadata))
+            ether_pkt = Ether(pkt_data)
+            self.process_packets(ether_pkt, get_packet_time(pkt_metadata))
             if self.packet_count > 3000:
                 break
 
