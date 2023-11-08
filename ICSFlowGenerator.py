@@ -95,8 +95,11 @@ To parse input arguments:
     def __init__(self):
         args = ICSFlowGenerator.get_args()
 
+        if not os.path.isdir("output"):
+            os.mkdir("output")
+
         self.event_logger = setup_logger(
-            "Events_log", logging.Formatter('%(message)s'), file_dir="./", file_ext='.txt')
+            "output/Events_log", logging.Formatter('%(message)s'), file_dir="./", file_ext='.txt')
 
         self.flow_queue = queue.Queue()
 
