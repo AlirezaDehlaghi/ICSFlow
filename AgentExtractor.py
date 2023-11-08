@@ -4,6 +4,7 @@ from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff
 from scapy.utils import RawPcapReader
 
+from Config import Config
 from Flow import Flow
 from FlowGeneratorActions import FlowGeneratorActions
 from Helper import get_packet_time, format_time
@@ -48,7 +49,7 @@ class AgentExtractor:
 
         self.processing_dict[key].add_packet(packet_para)
 
-        if self.packet_count % 100 == 0:
+        if Config.DEBUG and self.packet_count % Config.DEBUG_SNIFFED_PACKET_STEP == 0:
             self.report_progress()
 
     def report_progress(self):
@@ -57,7 +58,6 @@ class AgentExtractor:
     def flush_first_flow(self):
         time, flow = self.processing_queue.get()
         self.processing_dict.pop((flow.src, flow.des, flow.protocol))
-        flow.compute_parameters()
         self.output_queue.put(flow)
 
     def packet_handler(self, pkt):

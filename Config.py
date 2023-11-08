@@ -1,0 +1,6 @@
+class Config:
+    DEBUG = True
+    DEBUG_SNIFFED_PACKET_STEP = 1000
+    DEBUG_PROCESSED_FLOW_STEP = 100
+
+    RUN_THREADING = True

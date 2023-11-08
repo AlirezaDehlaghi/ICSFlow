@@ -6,6 +6,7 @@ import threading
 import time
 from AgentExtractor import AgentExtractor
 from AgentAnotator import AgentAnnotator
+from Config import Config
 from FlowGeneratorActions import FlowGeneratorActions
 from AgentSender import AgentSender
 from version import __version__
@@ -124,22 +125,28 @@ To parse input arguments:
         while not self.flow_queue.empty() or (not self.reader_thread_terminated):
             if self.flow_queue.empty():
                 time.sleep(2)
+
             else:
                 counter += 1
+
                 flow = self.flow_queue.get()
+                flow.compute_parameters()
                 self.agent_annotator.annotate(flow)
                 self.agent_sender.send(flow)
-                if counter % 100 == 0:
+
+                if Config.DEBUG and counter % Config.DEBUG_PROCESSED_FLOW_STEP == 0:
                     print("{} flows sent. ({} flows in the queue) ".format(counter, self.flow_queue.qsize()))
 
     def run(self):
-        self.reader_thread.start()
-        self.sender_thread.start()
-        self.reader_thread.join()
-        self.reader_thread_terminated = True
-        self.sender_thread.join()
-        # self.read_flows()
-        # self.send_flows()
+        if Config.RUN_THREADING:
+            self.reader_thread.start()
+            self.sender_thread.start()
+            self.reader_thread.join()
+            self.reader_thread_terminated = True
+            self.sender_thread.join()
+        else:
+            self.read_flows()
+            self.send_flows()
 
 
 if __name__ == '__main__':
