@@ -10,11 +10,11 @@ from Helper import get_packet_time, format_time
 from PacketParameter import PacketParameter
 
 
-class FlowExtractor:
+class AgentExtractor:
     def __init__(self, action, source, flow_interval, flow_queue, logger):
         self.action = action
         self.source = source
-        self.flow_dict = dict()
+        self.processing_dict = dict()
         self.processing_queue = queue.Queue()
         self.output_queue = flow_queue
         self.flow_interval = flow_interval
@@ -43,12 +43,12 @@ class FlowExtractor:
         flow_proto = packet_para.protocol_name
         key = (flow_src, flow_dst, flow_proto)
 
-        if not self.flow_dict.keys().__contains__(key):
+        if not self.processing_dict.keys().__contains__(key):
             new_flow = Flow(flow_src, flow_dst, flow_proto)
-            self.flow_dict[key] = new_flow
+            self.processing_dict[key] = new_flow
             self.processing_queue.put((pkt_time, new_flow))
 
-        self.flow_dict[key].add_packet(packet_para)
+        self.processing_dict[key].add_packet(packet_para)
 
         if self.packet_count % 1000 == 0:
             self.report_progress()
@@ -58,24 +58,27 @@ class FlowExtractor:
 
     def flush_first_flow(self):
         time, flow = self.processing_queue.get()
-        self.flow_dict.pop((flow.src, flow.des, flow.protocol))
+        self.processing_dict.pop((flow.src, flow.des, flow.protocol))
         flow.compute_parameters()
         self.output_queue.put(flow)
 
-    def packet_handler(self, pkt):
+    def __packet_handler(self, pkt):
         self.process_packets(pkt, pkt.time)
 
-    def read_pcap_file(self):
+    def __read_pcap_file(self):
+
+        # read packets from the file
         for (pkt_data, pkt_metadata,) in RawPcapReader(self.source):
             self.process_packets(pkt_data, get_packet_time(pkt_metadata))
-            # if self.packet_count > 3000:
-            #     break
+            if self.packet_count > 3000:
+                break
 
+        # flush remained flows in the processing queue
         while not self.processing_queue.empty():
             self.flush_first_flow()
 
     def extract(self):
         if self.action == FlowGeneratorActions.SNIFF:
-            sniff(self.source, self.packet_handler)
+            sniff(self.source, self.__packet_handler)
         elif self.action == FlowGeneratorActions.CONVERT:
-            self.read_pcap_file()
+            self.__read_pcap_file()

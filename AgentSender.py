@@ -2,7 +2,7 @@ import logging
 from Helper import setup_logger
 
 
-class FlowSender:
+class AgentSender:
     def __init__(self, file_address, server_address, logger):
 
         self.server = server_address  # todo: we have to create a client here

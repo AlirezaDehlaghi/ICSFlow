@@ -4,10 +4,10 @@ import logging
 import os
 import threading
 import time
-from FlowExtractor import FlowExtractor
-from FlowAnotator import FlowAnnotator
+from AgentExtractor import AgentExtractor
+from AgentAnotator import AgentAnnotator
 from FlowGeneratorActions import FlowGeneratorActions
-from FlowSender import FlowSender
+from AgentSender import AgentSender
 
 
 from Helper import  setup_logger
@@ -19,11 +19,29 @@ class ICSFlowGenerator:
 
     @staticmethod
     def get_args():
+        """
+To parse input arguments:
+
+  <action:sniff|convert>    Choose online sniffing of a LAN or offline converting
+                            PCAP file
+  --source <source file or LAN name>>
+                            In online sniffing provide <LAN name> and in offline
+                        converting provide <PCAP file>
+  --interval interval in seconds
+                        interval to compute flows
+  --attacks attack log csv file address
+                        attack file address for finding true flows' label
+  --classify model      address of pre trained ml model to classify incoming
+                        flows
+  --target_stream <Stream address>
+                        Target server address to stream out network flows
+  --target_file <csv file name>
+                        csv file to output"""
         parser = argparse.ArgumentParser(description='PCAP reader')
 
         parser.add_argument('action',
                             metavar='<action:{}|{}>'.format(FlowGeneratorActions.SNIFF, FlowGeneratorActions.CONVERT),
-                            help='Choose online sniffing of a LAN  or offline converting PCAP file')
+                            help='Choose online sniffing of a LAN  or offline converting PCAP file',  type=str.lower)
 
         parser.add_argument('--source', metavar='<source file or LAN name>>',
                             help='In online sniffing provide <LAN name> and in offline converting provide <PCAP file>',
@@ -81,39 +99,39 @@ class ICSFlowGenerator:
 
         self.flow_queue = queue.Queue()
 
-        self.flow_extractor = FlowExtractor(args.action, args.source, args.interval, self.flow_queue, self.event_logger)
-        self.flow_annotator = FlowAnnotator(args.classify, args.attacks, self.event_logger)
-        self.flow_sender = FlowSender(args.target_file, args.target_stream, self.event_logger)
+        self.agent_extractor = AgentExtractor(args.action, args.source, args.interval, self.flow_queue, self.event_logger)
+        self.agent_annotator = AgentAnnotator(args.classify, args.attacks, self.event_logger)
+        self.agent_sender = AgentSender(args.target_file, args.target_stream, self.event_logger)
 
-        self.sniffer_thread = threading.Thread(target=self.generate_flows)
-        self.sniffer_thread.daemon = True
+        self.reader_thread = threading.Thread(target=self.read_flows)
+        self.reader_thread.daemon = True
 
-        self.sender_thread = threading.Thread(target=self.record_flows)
+        self.sender_thread = threading.Thread(target=self.send_flows)
         self.sender_thread.daemon = True
 
-        self.read_finished_flag = False
+        self.reader_thread_terminated = False
 
-    def generate_flows(self):
-        self.flow_extractor.extract()
-        self.read_finished_flag = True
+    def read_flows(self):
+        self.agent_extractor.extract()
+        self.reader_thread_terminated = True
 
-    def record_flows(self):
-        while not self.flow_queue.empty() or (not self.read_finished_flag):
+    def send_flows(self):
+        while not self.flow_queue.empty() or (not self.reader_thread_terminated):
             if self.flow_queue.empty():
                 time.sleep(2)
             else:
                 flow = self.flow_queue.get()
-                self.flow_annotator.annotate(flow)
-                self.flow_sender.send(flow)
+                self.agent_annotator.annotate(flow)
+                self.agent_sender.send(flow)
 
     def run(self):
-        self.sniffer_thread.start()
+        self.reader_thread.start()
         self.sender_thread.start()
-        self.sniffer_thread.join()
-        self.read_finished_flag = True
+        self.reader_thread.join()
+        self.reader_thread_terminated = True
         self.sender_thread.join()
-        # self.generate_flows()
-        # self.record_flows()
+        # self.read_flows()
+        # self.send_flows()
 
 
 if __name__ == '__main__':

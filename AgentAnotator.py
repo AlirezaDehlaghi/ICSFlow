@@ -1,5 +1,5 @@
 
-class FlowAnnotator():
+class AgentAnnotator():
     def __init__(self, model_address, attacks_address, logger):
         self.ml_model = self.__get_ml_model(model_address)
         self.attacks = self.__get_attacks(attacks_address)
