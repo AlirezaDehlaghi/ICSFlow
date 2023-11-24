@@ -1,3 +1,3 @@
-# about this document
+about this document
 
 .. include:: ../README.md
