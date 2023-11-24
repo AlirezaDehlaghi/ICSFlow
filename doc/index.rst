@@ -11,7 +11,7 @@ Welcome to ICSFLow's documentation!
    :caption: Contents:
 
    readme.md
-   ../readme.md
+   ./../readme.md
    some-feature.md
    another-feature.md
    api.md
