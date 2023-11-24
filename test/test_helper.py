@@ -1,7 +1,7 @@
 
 import pytest
 
-from Helper import maximum
+from Helper import maximum, minimum
 
 
 def test_maximum():
