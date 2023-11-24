@@ -10,7 +10,7 @@ Welcome to ICSFLow's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   README.MD
+   about.MD
    some-feature.md
    another-feature.md
    api.md
