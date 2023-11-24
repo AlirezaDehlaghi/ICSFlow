@@ -12,3 +12,4 @@ Welcome to ICSSIM's documentation!
 
    some-feature.md
    another-feature.md
+   api.md

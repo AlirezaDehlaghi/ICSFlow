@@ -28,6 +28,12 @@ def setup_logger( name, format_str, level=logging.INFO, file_dir="./logs", file_
 
 
 def get_packet_time(pkt_metadata):
+    """
+    Create a formatted packet time based on meta data received from PCAP file.
+
+    :param pkt_metadata: meta data received from PCAP file.
+    :return: formatted packet time.
+    """
     return pkt_metadata.sec + pkt_metadata.usec / pow(10, 6)
 
 
