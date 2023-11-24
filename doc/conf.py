@@ -10,10 +10,10 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath(".."))
 
-project = 'Example'
-copyright = 'workshop participant'
-author = 'workshop participant'
-release = '0.1'
+project = 'ICSFlow'
+copyright = 'Alireza Dehlaghi'
+author = 'Alireza Dehlaghi'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
