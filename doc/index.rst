@@ -10,9 +10,7 @@ Welcome to ICSFLow's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   readme_link.rst
-   readme1.md
-   README.md
+   readme_copy.md
    some-feature.md
    another-feature.md
    api.md
