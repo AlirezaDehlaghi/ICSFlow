@@ -10,7 +10,7 @@ Welcome to ICSSIM's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   ../README.MD
+   README.MD
    some-feature.md
    another-feature.md
    api.md
