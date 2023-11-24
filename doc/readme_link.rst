@@ -1,3 +1,4 @@
-about this document
+My Title
+*********
 
 .. include:: ../README.md
