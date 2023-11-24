@@ -11,6 +11,7 @@ Welcome to ICSFLow's documentation!
    :caption: Contents:
 
    readme_link.rst
+   README.md
    some-feature.md
    another-feature.md
    api.md
