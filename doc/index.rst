@@ -12,7 +12,7 @@ Welcome to ICSFLow's documentation!
 
    readme1.md
    readme_link
-   ./../readme.md
+   ./../README.md
    some-feature.md
    another-feature.md
    api.md
