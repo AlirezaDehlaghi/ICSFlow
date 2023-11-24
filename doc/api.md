@@ -4,9 +4,7 @@
 
 ```{eval-rst}
 .. automodule:: Helper
-   :imported-members:
    :members:
-   :undoc-members:
    :show-inheritance:
 ```
 
