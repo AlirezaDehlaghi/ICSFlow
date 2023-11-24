@@ -8,12 +8,16 @@ Capabilities
 ------------
 
 Reading packets could be done in two modes 
+
 \* offline from PCAP file 
+
 \* online sniffing of LAN
 
 We can annotate data using True labels or predicted labels 
+
 * Ture Labels: proving attack history log files, it can detect which flows are
 malicious 
+
 * Predicated Labels: We could also try to analyze network flows with pretrained model and predict its anomality.
 
 Arguments
