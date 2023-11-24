@@ -9,9 +9,9 @@ Capabilities
 
 Reading packets could be done in two modes 
 
-\* offline from PCAP file 
+* offline from PCAP file 
 
-\* online sniffing of LAN
+* online sniffing of LAN
 
 We can annotate data using True labels or predicted labels 
 
