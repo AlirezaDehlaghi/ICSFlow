@@ -11,6 +11,4 @@ Welcome to ICSFLow's documentation!
    :caption: Contents:
 
    readme_copy.md
-   some-feature.md
-   another-feature.md
    api.md
