@@ -16,7 +16,8 @@ from Helper import setup_logger
 import queue
 
 
-class ICSFlowGenerator:
+class ICSFlowGenerator():
+    "This is the main class"
 
 
     @staticmethod
