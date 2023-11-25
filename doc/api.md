@@ -11,6 +11,9 @@
 ## ICSFlowGenerator Class
 
 ```{eval-rst}
-.. automodule:: ICSFlowGenerator
+.. autoclass:: ICSFlowGenerator.ICSFlowGenerator
+   :imported-members:
    :members:
+   :undoc-members:
+   :show-inheritance:
 ```
