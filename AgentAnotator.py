@@ -1,18 +1,25 @@
+import numpy as np
+import pandas as pd
+import joblib
+import tensorflow as tf
+from ModelCreator import create_model
+from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split
+from scikeras.wrappers import KerasClassifier
 
 class AgentAnnotator():
-    def __init__(self, model_address, attacks_address, logger):
-        self.ml_model = self.__get_ml_model(model_address)
+    def __init__(self, predictor_address, attacks_address):
+        self.ml_model = self.__get_ml_model(predictor_address)
         self.attacks = self.__get_attacks(attacks_address)
-        self. event_logger = logger
 
-    def __get_ml_model(self, model_address):
-        if model_address:
-            pass
-            # todo: complete it
+    @staticmethod
+    def __get_ml_model(predictor_address):
+        if predictor_address:
+            return joblib.load(predictor_address)
 
         return False
 
-    def __get_attacks(self, attacks_address):
+    @staticmethod
+    def __get_attacks(attacks_address):
         if attacks_address:
             attacks = []
 
@@ -42,14 +49,16 @@ class AgentAnnotator():
         if self.attacks:
             self.__set_label(flow)
 
-
     def __predict_label(self, flow):
-        pass
-        # todo complete it
+        df = pd.DataFrame(columns=flow.parameters.keys(), data=[flow.parameters.values()])
+        df.replace('', np.nan, inplace=True)
+        y_pred = self.ml_model.predict(df)
+        y_pred_classes = np.argmax(y_pred, axis=1)
+        flow.add_parameter("Prediction", str(y_pred_classes[0]))
+        flow.add_parameter("Prediction_Confidence" , str(y_pred[0][y_pred_classes[0]]))
 
     def __set_label(self, flow):
         if self.attacks:
-
             it_b_label = '0'
             it_m_label = 'Normal'
             nst_b_label = '0'

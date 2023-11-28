@@ -1,7 +1,7 @@
 import argparse
 from scapy.layers.l2 import Ether
 from scapy.all import *
-from Helper import setup_logger, get_packet_time, format_time, format_decimal, average, maximum, minimum
+from Helper import Log, get_packet_time, format_time, format_decimal, average, maximum, minimum
 from PacketParameter import PacketParameter
 
 

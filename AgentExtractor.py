@@ -1,3 +1,4 @@
+import logging
 import queue
 
 from scapy.layers.l2 import Ether
@@ -7,12 +8,12 @@ from scapy.utils import RawPcapReader
 from Config import Config
 from Flow import Flow
 from FlowGeneratorActions import FlowGeneratorActions
-from Helper import get_packet_time, format_time
+from Helper import get_packet_time, format_time, Log
 from PacketParameter import PacketParameter
 
 
 class AgentExtractor:
-    def __init__(self, action, source, flow_interval, flow_queue, logger):
+    def __init__(self, action, source, flow_interval, flow_queue):
         self.action = action
         self.source = source
         self.processing_dict = dict()
@@ -20,7 +21,6 @@ class AgentExtractor:
         self.output_queue = flow_queue
         self.flow_interval = flow_interval
         self.packet_count = 0
-        self.event_logger = logger
 
     def process_packets(self, ether_pkt, pkt_time):
 
@@ -33,10 +33,9 @@ class AgentExtractor:
         self.packet_count = self.packet_count + 1
 
         if 'type' not in ether_pkt.fields:
-            self.event_logger.info(
-                "Note: LLC frames Packet:{} on {}({})".format(self.packet_count, format_time(pkt_time), pkt_time))
+            Log.log(f'Note: LLC frames Packet:{self.packet_count} on {format_time(pkt_time)}({pkt_time})', logging.INFO)
             return
-        packet_para = PacketParameter(ether_pkt, pkt_time, self.event_logger)
+        packet_para = PacketParameter(ether_pkt, pkt_time)
         flow_src = min(packet_para.get_src(), packet_para.get_dst())
         flow_dst = max(packet_para.get_src(), packet_para.get_dst())
         flow_proto = packet_para.protocol_name
@@ -69,7 +68,7 @@ class AgentExtractor:
         for (pkt_data, pkt_metadata,) in RawPcapReader(self.source):
             ether_pkt = Ether(pkt_data)
             self.process_packets(ether_pkt, get_packet_time(pkt_metadata))
-            if self.packet_count > 3000:
+            if Config.DEBUG and self.packet_count > 3000:
                 break
 
         # flush remained flows in the processing queue

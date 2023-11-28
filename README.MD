@@ -29,7 +29,7 @@ options:
                         interval to compute flows
   --attacks attack log csv file address
                         attack file address for finding true flows' label
-  --classify model      address of pre trained ml model to classify incoming
+  --predictor model      address of pre trained ml model to classify incoming
                         flows
   --target_stream <Stream address>
                         Target server address to stream out network flows
@@ -50,6 +50,18 @@ Convert
     --interval      0.5
     --attacks       input/attacker_machine_summary.csv
     --target_file   output/sniffed.csv 
+```
+
+3) offline genering of network flows from PCAP file with True label annotation and prediction:
+```
+Convert 
+    --source        input/traffic.pcap
+    --interval      0.5
+    --attacks       input/attacker_machine_summary.csv
+    --predictor     input/predict_model.joblib
+    --target_file   output/sniffed.csv 
+    --target_stream broker.mqttdashboard.com:1883'
+    
 ```
 or 
 ```

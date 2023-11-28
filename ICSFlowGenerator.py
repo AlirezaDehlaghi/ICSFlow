@@ -9,15 +9,15 @@ from AgentAnotator import AgentAnnotator
 from Config import Config
 from FlowGeneratorActions import FlowGeneratorActions
 from AgentSender import AgentSender
+
 from version import __version__
 
-from Helper import setup_logger
+from Helper import Log
 
 import queue
 
 
 class ICSFlowGenerator:
-
 
     @staticmethod
     def get_args():
@@ -33,7 +33,7 @@ To parse input arguments:
                         interval to compute flows
   --attacks attack log csv file address
                         attack file address for finding true flows' label
-  --classify model      address of pre trained ml model to classify incoming
+  --predictor model      address of pre trained ml model to predict incoming
                         flows
   --target_stream <Stream address>
                         Target server address to stream out network flows
@@ -55,7 +55,7 @@ To parse input arguments:
         parser.add_argument('--attacks', metavar='attack log csv file address',
                             help='attack file address for finding true flows\' label', required=False)
 
-        parser.add_argument('--classify', metavar='model',
+        parser.add_argument('--predictor', metavar='model',
                             help='address of pre trained ml model  to classify incoming flows', required=False)
 
         parser.add_argument('--target_stream', metavar='<Stream address>',
@@ -82,14 +82,14 @@ To parse input arguments:
                 raise FileNotFoundError(
                     errno.ENOENT, os.strerror(errno.ENOENT), args.attacks)
 
-        # check classify
-        if args.classify:
-            if not os.path.isfile(args.classify):
+        # check predictor
+        if args.predictor:
+            if not os.path.isfile(args.predictor):
                 raise FileNotFoundError(
-                    errno.ENOENT, os.strerror(errno.ENOENT), args.classify)
+                    errno.ENOENT, os.strerror(errno.ENOENT), args.predictor)
 
         else:
-            args.classify = False
+            args.predictor = False
 
         return args
 
@@ -99,22 +99,24 @@ To parse input arguments:
         if not os.path.isdir("output"):
             os.mkdir("output")
 
-        self.event_logger = setup_logger(
-            "output/Events_log", logging.Formatter('%(message)s'), file_dir="./", file_ext='.txt')
+        Log.configure_log_files('./output/', True)
 
-        self.flow_queue = queue.Queue()
+        # Works as a pipeline between agents
+        self.flow_pipeline = queue.Queue()
 
-        self.agent_extractor = AgentExtractor(args.action, args.source, args.interval, self.flow_queue, self.event_logger)
-        self.agent_annotator = AgentAnnotator(args.classify, args.attacks, self.event_logger)
-        self.agent_sender = AgentSender(args.target_file, args.target_stream, self.event_logger)
+        # Create extractor, annotator and sender agents
+        self.agent_extractor = AgentExtractor(args.action, args.source, args.interval, self.flow_pipeline)
+        self.agent_annotator = AgentAnnotator(args.predictor, args.attacks)
+        self.agent_sender = AgentSender(args.target_file, args.target_stream)
 
+        # Create reader thread
         self.reader_thread = threading.Thread(target=self.read_flows)
         self.reader_thread.daemon = True
+        self.reader_thread_terminated = False
 
+        # Create sender thread
         self.sender_thread = threading.Thread(target=self.send_flows)
         self.sender_thread.daemon = True
-
-        self.reader_thread_terminated = False
 
     def read_flows(self):
         self.agent_extractor.extract()
@@ -122,22 +124,24 @@ To parse input arguments:
 
     def send_flows(self):
         counter = 0
-        while not self.flow_queue.empty() or (not self.reader_thread_terminated):
-            if self.flow_queue.empty():
+        while not self.flow_pipeline.empty() or (not self.reader_thread_terminated):
+            if self.flow_pipeline.empty():
                 time.sleep(2)
 
             else:
                 counter += 1
 
-                flow = self.flow_queue.get()
+                flow = self.flow_pipeline.get()
                 flow.compute_parameters()
                 self.agent_annotator.annotate(flow)
                 self.agent_sender.send(flow)
 
                 if Config.DEBUG and counter % Config.DEBUG_PROCESSED_FLOW_STEP == 0:
-                    print("{} flows sent. ({} flows in the queue) ".format(counter, self.flow_queue.qsize()))
+                    print("{} flows sent. ({} flows in the queue) ".format(counter, self.flow_pipeline.qsize()))
 
     def run(self):
+        Log.log('Program started.', logging.INFO)
+
         if Config.RUN_THREADING:
             self.reader_thread.start()
             self.sender_thread.start()
@@ -145,8 +149,11 @@ To parse input arguments:
             self.reader_thread_terminated = True
             self.sender_thread.join()
         else:
+            Log.log('Threading is not enabled!', logging.WARNING)
             self.read_flows()
             self.send_flows()
+
+        logging.info('Program Finished.')
 
 
 if __name__ == '__main__':

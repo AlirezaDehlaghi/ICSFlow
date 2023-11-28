@@ -1,8 +1,11 @@
+import logging
+from Helper import Log
+
 from scapy.layers.inet import TCP, UDP, IP
 
 
 class PacketParameter:
-    def __init__(self, ether_pkt, pkt_time, logger):
+    def __init__(self, ether_pkt, pkt_time):
         self.src_mac = ether_pkt.src
         self.dst_mac = ether_pkt.dst
         self.length = len(ether_pkt)
@@ -40,7 +43,8 @@ class PacketParameter:
             else:
                 self.payload = self.payload = ip_pkt.len - (ip_pkt.ihl * 4) - (8 * 4)  # default is 8 bytes
                 self.protocol_name = "IPV4-" + str(self.proto)
-                logger.error("Packet parameter is computing for non TCP and UDP packet type (time = {}).".format(pkt_time))
+                Log.log(f'Packet parameter is computing for non TCP and UDP packet type (time = {pkt_time}).',
+                        logging.WARNING)
 
         elif self.is_arp():
             self.payload = self.length - 4
@@ -53,7 +57,8 @@ class PacketParameter:
         else:
             self.payload = self.length - 4
             self.protocol_name = str(self.type)
-            logger.error("Packet parameter is computing for unknown packet type (time = {}).".format(pkt_time))
+            Log.log(f'Packet parameter is computing for unknown packet type (time = {pkt_time}).',
+                    logging.WARNING)
 
     def is_ip(self):
         return self.type == 0x0800
