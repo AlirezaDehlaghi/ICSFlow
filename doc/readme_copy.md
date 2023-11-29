@@ -1,5 +1,5 @@
 
-# ICSFLowGenerator
+# ICSFLowGenerator in Docs
 
 This is tool for offline and online processing of network packets and creating network flows.
 
@@ -29,7 +29,7 @@ options:
                         interval to compute flows
   --attacks attack log csv file address
                         attack file address for finding true flows' label
-  --classify model      address of pre trained ml model to classify incoming
+  --predictor model      address of pre trained ml model to classify incoming
                         flows
   --target_stream <Stream address>
                         Target server address to stream out network flows
@@ -38,12 +38,13 @@ options:
 
 
 ## Sample runtime arguments
-1) sniffing from lan without annotation:
+1) sniffing from Wi-Fi lan without annotation and writing flows to file:
 ```
 sniff --source   Wi-Fi   --interval   0.5   --target_file   output/sniffed.csv 
 ```
 
-2) offline genering of network flows from PCAP file with True label annotation:
+
+2) offline generating of network flows from PCAP file with True label annotation and writing flows to file::
 ```
 Convert 
     --source        input/traffic.pcap
@@ -51,7 +52,28 @@ Convert
     --attacks       input/attacker_machine_summary.csv
     --target_file   output/sniffed.csv 
 ```
+
+3) offline generating of network flows from PCAP file with True label annotation and prediction and writing flows to file:
+```
+Convert 
+    --source                input/traffic.pcap
+    --interval              0.5
+    --attacks               input/attacker_machine_summary.csv
+    --predictor             input/predict_model.joblib
+    --target_file           output/sniffed.csv  
+```
 or 
 ```
-Convert  --source  input/traffic.pcap --interval      0.5 --attacks       input/attacker_machine_summary.csv  --target_file   output/sniffed.csv 
+Convert  --source  input/traffic.pcap --interval 0.5 --attacks  input/attacker_machine_summary.csv  --target_file  output/sniffed.csv 
+```
+
+4) offline generating of network flows from PCAP file with True label annotation and prediction and sending them to both target file and MQTT server with credential:
+```
+Convert 
+    --source                    input/traffic.pcap
+    --interval                  0.5
+    --attacks                   input/attacker_machine_summary.csv
+    --predictor                 input/predict_model.joblib
+    --target_file               output/sniffed.csv 
+    --target_connection         sample_connection.txt
 ```

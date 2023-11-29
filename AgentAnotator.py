@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
 import joblib
-import tensorflow as tf
-from ModelCreator import create_model
-from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split
-from scikeras.wrappers import KerasClassifier
+# import tensorflow as tf
+# from ModelCreator import create_model
+# from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split
+# from scikeras.wrappers import KerasClassifier
 
-class AgentAnnotator():
+
+class AgentAnnotator:
     def __init__(self, predictor_address, attacks_address):
         self.ml_model = self.__get_ml_model(predictor_address)
         self.attacks = self.__get_attacks(attacks_address)

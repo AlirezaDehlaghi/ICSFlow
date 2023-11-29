@@ -38,12 +38,13 @@ options:
 
 
 ## Sample runtime arguments
-1) sniffing from lan without annotation:
+1) sniffing from Wi-Fi lan without annotation and writing flows to file:
 ```
 sniff --source   Wi-Fi   --interval   0.5   --target_file   output/sniffed.csv 
 ```
 
-2) offline genering of network flows from PCAP file with True label annotation:
+
+2) offline generating of network flows from PCAP file with True label annotation and writing flows to file::
 ```
 Convert 
     --source        input/traffic.pcap
@@ -52,18 +53,27 @@ Convert
     --target_file   output/sniffed.csv 
 ```
 
-3) offline genering of network flows from PCAP file with True label annotation and prediction:
+3) offline generating of network flows from PCAP file with True label annotation and prediction and writing flows to file:
 ```
 Convert 
-    --source        input/traffic.pcap
-    --interval      0.5
-    --attacks       input/attacker_machine_summary.csv
-    --predictor     input/predict_model.joblib
-    --target_file   output/sniffed.csv 
-    --target_stream broker.mqttdashboard.com:1883'
-    
+    --source                input/traffic.pcap
+    --interval              0.5
+    --attacks               input/attacker_machine_summary.csv
+    --predictor             input/predict_model.joblib
+    --target_file           output/sniffed.csv  
 ```
 or 
 ```
-Convert  --source  input/traffic.pcap --interval      0.5 --attacks       input/attacker_machine_summary.csv  --target_file   output/sniffed.csv 
+Convert  --source  input/traffic.pcap --interval 0.5 --attacks  input/attacker_machine_summary.csv  --target_file  output/sniffed.csv 
+```
+
+4) offline generating of network flows from PCAP file with True label annotation and prediction and sending them to both target file and MQTT server with credential:
+```
+Convert 
+    --source                    input/traffic.pcap
+    --interval                  0.5
+    --attacks                   input/attacker_machine_summary.csv
+    --predictor                 input/predict_model.joblib
+    --target_file               output/sniffed.csv 
+    --target_connection         sample_connection.txt
 ```

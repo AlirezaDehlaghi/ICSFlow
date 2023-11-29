@@ -58,8 +58,8 @@ To parse input arguments:
         parser.add_argument('--predictor', metavar='model',
                             help='address of pre trained ml model  to classify incoming flows', required=False)
 
-        parser.add_argument('--target_stream', metavar='<Stream address>',
-                            help='Target server address to stream out network flows')
+        parser.add_argument('--target_connection', metavar='<Target connection>',
+                            help='Target server connection file to stream out network flows')
 
         parser.add_argument('--target_file', metavar='<csv file name>',
                             help='csv file to output')
@@ -88,8 +88,14 @@ To parse input arguments:
                 raise FileNotFoundError(
                     errno.ENOENT, os.strerror(errno.ENOENT), args.predictor)
 
-        else:
-            args.predictor = False
+        if not args.target_connection and not args.target_file:
+            raise RuntimeError("No target defined in arguments." +
+                               " Giving one of target_stream or target_file is mandatory")
+
+        if args.target_connection:
+            if not os.path.isfile(args.target_connection):
+                raise FileNotFoundError(
+                    errno.ENOENT, os.strerror(errno.ENOENT), args.target_connection)
 
         return args
 
@@ -107,7 +113,7 @@ To parse input arguments:
         # Create extractor, annotator and sender agents
         self.agent_extractor = AgentExtractor(args.action, args.source, args.interval, self.flow_pipeline)
         self.agent_annotator = AgentAnnotator(args.predictor, args.attacks)
-        self.agent_sender = AgentSender(args.target_file, args.target_stream)
+        self.agent_sender = AgentSender(args.target_file, args.target_connection)
 
         # Create reader thread
         self.reader_thread = threading.Thread(target=self.read_flows)
@@ -144,6 +150,7 @@ To parse input arguments:
 
         if Config.RUN_THREADING:
             self.reader_thread.start()
+            Log.log('')
             self.sender_thread.start()
             self.reader_thread.join()
             self.reader_thread_terminated = True

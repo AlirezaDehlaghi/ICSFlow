@@ -1,31 +1,26 @@
 import json
 import logging
+
+from Connection import Connection
 from Helper import Log
 import paho.mqtt.client as paho
 
 
 class AgentSender:
-    def __init__(self, file_address, server_address):
-        self.topic = 'testtopic/icssim'
-
-        self.client = self.__get_client(server_address)
+    def __init__(self, file_address, server_connection):
+        self.client = self.__get_client(server_connection)
         self.file = self.__get_file(file_address)
 
         self.FILE_HEADER_PRINTED = False
 
-    def __get_client(self, server_address):
-        if not server_address or not server_address.strip():
+    @staticmethod
+    def __get_client(server_connection):
+
+        if not server_connection or not server_connection.strip():
             return False;
 
-        tokens = server_address.split(':')
-        if len(tokens) != 2:
-            Log.log('Server_address is not in correct format!', logging.ERROR)
-
-        broker_address = tokens[0]
-        port = tokens[1]
-        client = paho.Client()
-        client.connect(broker_address, int(port))
-        client.loop_start()
+        client = Connection.build(server_connection)
+        client.start()
         return client
 
     @staticmethod
@@ -50,4 +45,4 @@ class AgentSender:
 
     def __send_flows_to_server(self, flow):
         message = json.dumps(flow.parameters)
-        self.client.publish(self.topic, message)
+        self.client.send(message)
