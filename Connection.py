@@ -24,6 +24,9 @@ class Connection(ABC):
                 for line in file:
                     if not line.strip():
                         continue
+
+                    if line.strip().startswith("#"):
+                        continue
                     # Split each line into key and value using ':' as the delimiter
                     key, value = map(str.strip, line.split(':', 1))
                     connection_params[key] = value

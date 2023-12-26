@@ -5,10 +5,11 @@ import os
 import threading
 import time
 from AgentExtractor import AgentExtractor
-from AgentAnotator import AgentAnnotator
+from AgentProcessor import AgentProcessor
+from ProcessAnotator import ProcessAnotator
 from Config import Config
 from FlowGeneratorActions import FlowGeneratorActions
-from AgentSender import AgentSender
+from ProcessFlowSenderMQTT import ProcessFlowSenderMQTT
 
 from version import __version__
 
@@ -112,8 +113,7 @@ To parse input arguments:
 
         # Create extractor, annotator and sender agents
         self.agent_extractor = AgentExtractor(args.action, args.source, args.interval, self.flow_pipeline)
-        self.agent_annotator = AgentAnnotator(args.predictor, args.attacks)
-        self.agent_sender = AgentSender(args.target_file, args.target_connection)
+        self.agent_processor = AgentProcessor(args.predictor, args.attacks, args.target_file, args.target_connection)
 
         # Create reader thread
         self.reader_thread = threading.Thread(target=self.read_flows)
@@ -139,8 +139,7 @@ To parse input arguments:
 
                 flow = self.flow_pipeline.get()
                 flow.compute_parameters()
-                self.agent_annotator.annotate(flow)
-                self.agent_sender.send(flow)
+                self.agent_processor.process(flow)
 
                 if Config.DEBUG and counter % Config.DEBUG_PROCESSED_FLOW_STEP == 0:
                     print("{} flows sent. ({} flows in the queue) ".format(counter, self.flow_pipeline.qsize()))

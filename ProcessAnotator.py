@@ -5,9 +5,10 @@ import joblib
 # from ModelCreator import create_model
 # from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split
 # from scikeras.wrappers import KerasClassifier
+from Constants import Texts
 
 
-class AgentAnnotator:
+class ProcessAnotator:
     def __init__(self, predictor_address, attacks_address):
         self.ml_model = self.__get_ml_model(predictor_address)
         self.attacks = self.__get_attacks(attacks_address)
@@ -43,7 +44,7 @@ class AgentAnnotator:
             return attacks
         return False
 
-    def annotate(self, flow):
+    def process(self, flow):
         if self.ml_model:
             self.__predict_label(flow)
 
@@ -55,8 +56,8 @@ class AgentAnnotator:
         df.replace('', np.nan, inplace=True)
         y_pred = self.ml_model.predict(df)
         y_pred_classes = np.argmax(y_pred, axis=1)
-        flow.add_parameter("Prediction", str(y_pred_classes[0]))
-        flow.add_parameter("Prediction_Confidence" , str(y_pred[0][y_pred_classes[0]]))
+        flow.add_parameter(Texts.Prediction, str(y_pred_classes[0]))
+        flow.add_parameter(Texts.prediction_confidence, str(y_pred[0][y_pred_classes[0]]))
 
     def __set_label(self, flow):
         if self.attacks:
