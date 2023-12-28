@@ -29,16 +29,16 @@ class Labels:
         Normal: 0,
         DDoS: 1,
         IP_Scan: 2,
-        Port_Scan: 3,
-        Replay: 4,
-        MITM: 5
+        Port_Scan: 4,
+        Replay: 5,
+        MITM: 3
     }
 
     dict_index_to_class = {
         0: Normal,
         1: DDoS,
         2: IP_Scan,
-        3: Port_Scan,
-        4: Replay,
-        5: MITM
+        3: MITM,
+        4: Port_Scan,
+        5: Replay
     }
