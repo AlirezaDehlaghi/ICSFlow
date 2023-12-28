@@ -18,8 +18,8 @@ class ProcessAnotator:
     @staticmethod
     def __get_ml_model(predictor_address):
         if predictor_address:
-            #return joblib.load(predictor_address)
-            return pickle.load(open(predictor_address , 'rb'))
+            return joblib.load(predictor_address)
+            #return pickle.load(open(predictor_address , 'rb'))
 
         return False
 
