@@ -27,7 +27,7 @@ class ProcessStatusSenderMQTT:
             self.__flush_status(start_time)
 
         if start_time < self.timer_idx:
-            Log.log("Skipped flow! out of order flow!",  level=logging.WARNING)
+            Log.log("Skipped flow! out of order flow!", level=logging.WARNING)
 
         link = (flow.src, flow.des, flow.protocol)
         if not self.link_flows.keys().__contains__(link):
@@ -66,7 +66,8 @@ class ProcessStatusSenderMQTT:
             counter = Counter(votes)
             most_common_item = counter.most_common(1)[0][0]
 
-            if most_common_item == normal_index:
+            if most_common_item == normal_index or len(flows) < 2 or link[0] == '192.168.0.43' or \
+                    link[1] == '192.168.0.43':
                 continue
 
             attack = dict()
@@ -96,6 +97,3 @@ class ProcessStatusSenderMQTT:
         status[Texts.num_discovered_attacks] = len(detected_attacks)
 
         return status
-
-
-
