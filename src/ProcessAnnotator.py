@@ -125,6 +125,3 @@ class ProcessAnnotator:
             flow.add_parameter("NST_B_Label", nst_b_label)
             flow.add_parameter("NST_M_Label", nst_m_label)
 
-    def softmax(self, x):
-        exp_x = np.exp(x - np.max(x))
-        return exp_x / exp_x.sum(axis=1, keepdims=True)

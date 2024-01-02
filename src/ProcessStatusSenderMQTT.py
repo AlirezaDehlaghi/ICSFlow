@@ -79,8 +79,11 @@ class ProcessStatusSenderMQTT:
             confidences = []
             counter_anomalies_link = 0
 
+            sum_packets =0 # todo: delete
+
             for flow in flows:
                 prediction = flow.parameters[Config.Texts.Prediction]
+                sum_packets += int(flow.parameters["sPackets"]) + int(flow.parameters["rPackets"])
                 if prediction == most_common_item:
                     confidences.append(float(flow.parameters[Config.Texts.prediction_confidence]))
                     counter_anomalies_link += 1
