@@ -1,8 +1,8 @@
 from ProcessAnnotator import ProcessAnnotator
 from ProcessFlowFileWriter import ProcessFlowFileWriter
 from ProcessStatusSenderMQTT import ProcessStatusSenderMQTT
-from src.Config import Config
-from src.ProcessFlowSenderMQTT import ProcessFlowSenderMQTT
+from Config import Config
+from ProcessFlowSenderMQTT import ProcessFlowSenderMQTT
 
 
 class AgentProcessor:
