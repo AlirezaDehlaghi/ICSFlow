@@ -96,6 +96,7 @@ class ProcessAnnotator:
         df.replace('', np.nan, inplace=True)
         y_pred = self.ml_model.predict_proba(df)
         print(df)
+        y_pred = self.softmax(y_pred)
         print(y_pred)
         y_pred_classes = np.argmax(y_pred, axis=1)
         flow.add_parameter(Config.Texts.Prediction, self.label_index[str(y_pred_classes[0])])
@@ -126,3 +127,7 @@ class ProcessAnnotator:
             flow.add_parameter("IT_M_Label", it_m_label)
             flow.add_parameter("NST_B_Label", nst_b_label)
             flow.add_parameter("NST_M_Label", nst_m_label)
+
+    def softmax(self, x):
+        exp_x = np.exp(x - np.max(x))
+        return exp_x / exp_x.sum(axis=1, keepdims=True)
