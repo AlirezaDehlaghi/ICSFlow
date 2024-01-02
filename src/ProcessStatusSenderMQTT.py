@@ -95,6 +95,7 @@ class ProcessStatusSenderMQTT:
             attack[Config.Texts.prediction_confidence] = sum(confidences) / len(confidences)
             attack[Config.Texts.num_flows_link] = len(flows)
             attack[Config.Texts.num_anomalous_flows_link] = counter_anomalies_link
+            attack["Number of packets"] = sum_packets
             detected_attacks.append(attack)
 
         status[Config.Texts.num_flows_all] = counter_flows
