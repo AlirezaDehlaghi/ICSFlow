@@ -138,15 +138,14 @@ To parse input arguments:
                 flow.compute_parameters()
                 self.agent_processor.process(flow)
 
-                if Config.Debug.DEBUG and counter % Config.Debug.DEBUG_PROCESSED_FLOW_STEP == 0:
+                if Config.RUN.VERBOSE and counter % Config.RUN.VERBOSE_PROCESSED_FLOW_STEP == 0:
                     print("{} flows sent. ({} flows in the queue) ".format(counter, self.flow_pipeline.qsize()))
 
     def run(self):
         Log.log('Program started.', logging.INFO)
 
-        if Config.Debug.RUN_THREADING:
+        if Config.RUN.RUN_THREADING:
             self.reader_thread.start()
-            Log.log('', logging.DEBUG)
             self.sender_thread.start()
             self.reader_thread.join()
             self.reader_thread_terminated = True

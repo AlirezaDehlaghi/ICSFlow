@@ -48,7 +48,7 @@ class AgentExtractor:
 
         self.processing_dict[key].add_packet(packet_para)
 
-        if Config.Debug.DEBUG and self.packet_count % Config.Debug.DEBUG_SNIFFED_PACKET_STEP == 0:
+        if Config.RUN.VERBOSE and self.packet_count % Config.RUN.VERBOSE_SNIFFED_PACKET_STEP == 0:
             self.report_progress()
 
     def report_progress(self):
@@ -68,7 +68,7 @@ class AgentExtractor:
         for (pkt_data, pkt_metadata,) in RawPcapReader(self.source):
             ether_pkt = Ether(pkt_data)
             self.process_packets(ether_pkt, get_packet_time(pkt_metadata))
-            if Config.Debug.DEBUG and self.packet_count > 3000:
+            if Config.RUN.DEBUG and self.packet_count > 3000:
                 break
 
         # flush remained flows in the processing queue
