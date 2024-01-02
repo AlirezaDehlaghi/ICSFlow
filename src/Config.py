@@ -1,12 +1,12 @@
 class Config:
     class RUN:
-        DEBUG = True
+        DEBUG = False
 
         VERBOSE = True
         VERBOSE_SNIFFED_PACKET_STEP = 1000
         VERBOSE_PROCESSED_FLOW_STEP = 100
 
-        RUN_THREADING = False
+        RUN_THREADING = not DEBUG
 
     class Train:
         DEFAULT_TRAIN_DATASET = 'input/Dataset.csv'
