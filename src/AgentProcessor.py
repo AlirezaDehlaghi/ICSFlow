@@ -18,7 +18,7 @@ class AgentProcessor:
         self.__processes.append(flow_file_writer)
         if annotator.is_prediction_enabled():
             self.__processes.append(status_sender)
-        self.__processes.append(flow_sender)
+        #self.__processes.append(flow_sender)
 
     def process(self, flow):
         for prc in self.__processes:
