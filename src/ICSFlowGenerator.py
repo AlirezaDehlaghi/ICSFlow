@@ -12,6 +12,8 @@ from Helper import Log
 
 import queue
 
+from Config import Config
+
 
 class ICSFlowGenerator:
 
@@ -136,13 +138,13 @@ To parse input arguments:
                 flow.compute_parameters()
                 self.agent_processor.process(flow)
 
-                if Config.DEBUG and counter % Config.DEBUG_PROCESSED_FLOW_STEP == 0:
+                if Config.Debug.DEBUG and counter % Config.Debug.DEBUG_PROCESSED_FLOW_STEP == 0:
                     print("{} flows sent. ({} flows in the queue) ".format(counter, self.flow_pipeline.qsize()))
 
     def run(self):
         Log.log('Program started.', logging.INFO)
 
-        if Config.RUN_THREADING:
+        if Config.Debug.RUN_THREADING:
             self.reader_thread.start()
             Log.log('', logging.DEBUG)
             self.sender_thread.start()

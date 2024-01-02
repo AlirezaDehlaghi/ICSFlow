@@ -4,7 +4,7 @@ from collections import Counter
 
 from Connection import Connection
 from Helper import Log
-from src.Config import Config
+from Config import Config
 
 
 class ProcessStatusSenderMQTT:

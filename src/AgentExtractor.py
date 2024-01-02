@@ -9,6 +9,7 @@ from Flow import Flow
 from FlowGeneratorActions import FlowGeneratorActions
 from Helper import get_packet_time, format_time, Log
 from PacketParameter import PacketParameter
+from Config import Config
 
 
 class AgentExtractor:
@@ -76,6 +77,6 @@ class AgentExtractor:
 
     def extract(self):
         if self.action == FlowGeneratorActions.SNIFF:
-            sniff(iface = self.source, prn = self.packet_handler)
+            sniff(iface=self.source, prn=self.packet_handler)
         elif self.action == FlowGeneratorActions.CONVERT:
             self.__read_pcap_file()

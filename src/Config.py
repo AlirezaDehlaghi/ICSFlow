@@ -42,3 +42,4 @@ class Config:
         Port_Scan = "port-scan"
         Replay = "replay"
         MITM = "mitm"
+
