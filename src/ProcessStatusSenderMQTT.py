@@ -54,6 +54,8 @@ class ProcessStatusSenderMQTT:
         counter_flows = 0
         counter_anomalies = 0
 
+        list_of_anomalies = []  #todo: to detete
+
         for link, flows in self.link_flows.items():
             counter_flows += len(flows)
 
@@ -61,6 +63,7 @@ class ProcessStatusSenderMQTT:
             for flow in flows:
                 prediction = flow.parameters[Config.Texts.Prediction]
                 if not prediction == Config.Labels.Normal:
+                    list_of_anomalies.append((link, prediction))
                     counter_anomalies += 1
                 votes.append(prediction)
             counter = Counter(votes)
@@ -95,5 +98,6 @@ class ProcessStatusSenderMQTT:
         status[Config.Texts.start] = self.timer_idx
         status[Config.Texts.end] = end_time
         status[Config.Texts.num_discovered_attacks] = len(detected_attacks)
+        status["list_of_anomalies"] = list_of_anomalies
 
         return status
