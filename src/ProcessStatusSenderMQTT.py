@@ -80,7 +80,7 @@ class ProcessStatusSenderMQTT:
             counter_anomalies_link = 0
 
             for flow in flows:
-                prediction = int(flow.parameters[Config.Texts.Prediction])
+                prediction = flow.parameters[Config.Texts.Prediction]
                 if prediction == most_common_item:
                     confidences.append(float(flow.parameters[Config.Texts.prediction_confidence]))
                     counter_anomalies_link += 1
