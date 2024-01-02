@@ -95,13 +95,9 @@ class ProcessAnnotator:
         df = pd.DataFrame(columns=flow.parameters.keys(), data=[flow.parameters.values()])
         df.replace('', np.nan, inplace=True)
         y_pred = self.ml_model.predict_proba(df)
-        print(df)
-        classes_probs = self.softmax(y_pred)
-        print(classes_probs)
-        print(y_pred)
-        y_pred_classes = np.argmax(y_pred, axis=1)
-        flow.add_parameter(Config.Texts.Prediction, self.label_index[str(y_pred_classes[0])])
-        flow.add_parameter(Config.Texts.prediction_confidence, str(y_pred[0][y_pred_classes[0]]))
+        y_pred_classes = np.argmax(y_pred, axis=0)
+        flow.add_parameter(Config.Texts.Prediction, self.label_index[str(y_pred_classes)])
+        flow.add_parameter(Config.Texts.prediction_confidence, str(y_pred[y_pred_classes]))
 
     def __set_label(self, flow):
         if self.attacks:
