@@ -1,7 +1,4 @@
-
-import pytest
-
-from Helper import maximum, minimum
+from src.Helper import maximum, minimum
 
 def test_maximum():
     assert maximum([]) == ''
