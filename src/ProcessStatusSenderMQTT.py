@@ -71,7 +71,7 @@ class ProcessStatusSenderMQTT:
             counter = Counter(votes)
             most_common_item = counter.most_common(1)[0][0]
 
-            if most_common_item == Config.Labels.Normal or len(flows) < 2:
+            if most_common_item == Config.Labels.Normal:
                 #  link[0] == '192.168.0.43' or link[1] == '192.168.0.43':
                 continue
 
