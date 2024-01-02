@@ -94,7 +94,8 @@ class ProcessAnnotator:
     def __predict_label(self, flow):
         df = pd.DataFrame(columns=flow.parameters.keys(), data=[flow.parameters.values()])
         df.replace('', np.nan, inplace=True)
-        y_pred = self.ml_model.predict(df)
+        y_pred = self.ml_model.predict_proba(df)
+        print(df)
         print(y_pred)
         y_pred_classes = np.argmax(y_pred, axis=1)
         flow.add_parameter(Config.Texts.Prediction, self.label_index[str(y_pred_classes[0])])
