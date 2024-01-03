@@ -55,7 +55,7 @@ class ProcessStatusSenderMQTT:
         counter_anomalies = 0
         valid_ips = ["192.168.0.11", "192.168.0.12", "192.168.0.21", "192.168.0.22", "192.168.0.43"]
 
-        list_of_anomalies = []  # todo: to detete
+        #list_of_anomalies = []
 
         for link, flows in self.link_flows.items():
             counter_flows += len(flows)
@@ -64,15 +64,15 @@ class ProcessStatusSenderMQTT:
             for flow in flows:
                 prediction = flow.parameters[Config.Texts.Prediction]
 
-                # A quick fix
+                # A quick fix # todo: to detete
                 if flow.des == "192.168.0.43" and (
                         int(flow.parameters["sPackets"]) + int(flow.parameters["rPackets"]) > 100) and (
                         prediction == "replay" or prediction == "mitm"):
                     flow.parameters[Config.Texts.Prediction] = prediction = "ddos"  # this is just for quick fix.
 
                 if not prediction == Config.Labels.Normal:
-                    list_of_anomalies.append((link[0], link[1], link[2], prediction,
-                                              int(flow.parameters["sPackets"]) + int(flow.parameters["rPackets"])))
+                    #list_of_anomalies.append((link[0], link[1], link[2], prediction,
+                    #                          int(flow.parameters["sPackets"]) + int(flow.parameters["rPackets"])))
                     counter_anomalies += 1
                 votes.append(prediction)
             counter = Counter(votes)
@@ -111,6 +111,6 @@ class ProcessStatusSenderMQTT:
         status[Config.Texts.start] = self.timer_idx
         status[Config.Texts.end] = end_time
         status[Config.Texts.num_discovered_attacks] = len(detected_attacks)
-        status["list_of_anomalies"] = list_of_anomalies
+        #status["list_of_anomalies"] = list_of_anomalies
 
         return status
