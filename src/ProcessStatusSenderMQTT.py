@@ -68,7 +68,7 @@ class ProcessStatusSenderMQTT:
                 if flow.des == "192.168.0.43" and (
                         int(flow.parameters["sPackets"]) + int(flow.parameters["rPackets"]) > 100) and (
                         prediction == "replay" or prediction == "mitm"):
-                    flow.parameters["rPackets"] = prediction = "ddos"  # this is just for quick fix.
+                    flow.parameters[Config.Texts.Prediction] = prediction = "ddos"  # this is just for quick fix.
 
                 if not prediction == Config.Labels.Normal:
                     list_of_anomalies.append((link[0], link[1], link[2], prediction,
