@@ -53,6 +53,7 @@ class ProcessStatusSenderMQTT:
         detected_attacks = []
         counter_flows = 0
         counter_anomalies = 0
+        valid_ips = ["192.168.0.11", "192.168.0.12", "192.168.0.21", "192.168.0.21", "192.168.0.43"]
 
         list_of_anomalies = []  #todo: to detete
 
@@ -69,8 +70,7 @@ class ProcessStatusSenderMQTT:
             counter = Counter(votes)
             most_common_item = counter.most_common(1)[0][0]
 
-            if most_common_item == Config.Labels.Normal:
-                #  link[0] == '192.168.0.43' or link[1] == '192.168.0.43':
+            if most_common_item == Config.Labels.Normal or link[0] not in valid_ips or link[1] not in '192.168.0.43':
                 continue
 
             attack = dict()
