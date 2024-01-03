@@ -63,7 +63,7 @@ class ProcessStatusSenderMQTT:
             for flow in flows:
                 prediction = flow.parameters[Config.Texts.Prediction]
                 if not prediction == Config.Labels.Normal:
-                    list_of_anomalies.append(link[0], link[1], link[2], prediction, int(flow.parameters["sPackets"]) + int(flow.parameters["rPackets"]))
+                    list_of_anomalies.append((link[0], link[1], link[2], prediction, int(flow.parameters["sPackets"]) + int(flow.parameters["rPackets"])))
                     counter_anomalies += 1
                 votes.append(prediction)
             counter = Counter(votes)
