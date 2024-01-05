@@ -9,7 +9,7 @@ class ProcessFlowFileWriter:
 
     @staticmethod
     def __get_file(file_address):
-        return Log.setup_new_logger(file_address, logging.Formatter('%(message)s'), file_dir="../", file_ext='.csv') \
+        return Log.setup_new_logger(file_address, logging.Formatter('%(message)s'), file_dir="", file_ext='.csv') \
             if file_address.strip() else False
 
     def process(self, flow):
