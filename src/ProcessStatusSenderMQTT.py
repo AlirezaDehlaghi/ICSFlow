@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from collections import Counter
 
 from Connection import Connection
@@ -39,6 +40,7 @@ class ProcessStatusSenderMQTT:
     def __send_flows_to_server(self, status):
         message = json.dumps(status)
         self.client.send(message)
+
 
     def __flush_status(self, end_time):
         if not len(self.link_flows) == 0:
@@ -112,5 +114,9 @@ class ProcessStatusSenderMQTT:
         status[Config.Texts.end] = end_time
         status[Config.Texts.num_discovered_attacks] = len(detected_attacks)
         #status["list_of_anomalies"] = list_of_anomalies
+
+        with open(os.path.join('output', str(end_time),'txt'), 'w') as file:
+            # Write your message to the file
+            file.write(json.dumps(status))
 
         return status
