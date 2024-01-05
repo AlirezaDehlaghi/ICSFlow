@@ -100,8 +100,8 @@ To parse input arguments:
     def __init__(self):
         args = ICSFlowGenerator.get_args()
 
-        if not os.path.isdir("../output"):
-            os.mkdir("../output")
+        if not os.path.isdir("./output"):
+            os.mkdir("./output")
 
         Log.configure_log_files('./output/', True)
 
