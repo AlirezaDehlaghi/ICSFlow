@@ -9,6 +9,7 @@ class Connection(ABC):
         self.type = params['type']
         self.address = params['address']
         self.port = int(params['port'])
+        self.credential = False
 
         if params.keys().__contains__('username') and params.keys().__contains__('password'):
             self.credential = True
@@ -68,7 +69,6 @@ class MQTTConnection(Connection):
     def __init__(self, params):
         Connection.__init__(self, params)
 
-        self.credential = False
         self.topic = params['topic']
         self.client = paho.Client()
 
