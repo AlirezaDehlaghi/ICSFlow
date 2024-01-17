@@ -1,5 +1,6 @@
 import logging
 import queue
+from datetime import datetime
 
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff
@@ -52,7 +53,7 @@ class AgentExtractor:
             self.report_progress()
 
     def report_progress(self):
-        print("{}ed {} item from {}.".format(self.action, self.packet_count, self.source))
+        print("{}: {}ed {} item from {}.".format(datetime.now(), self.action, self.packet_count, self.source))
 
     def flush_first_flow(self):
         time, flow = self.processing_queue.get()

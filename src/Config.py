@@ -3,7 +3,7 @@ class Config:
         DEBUG = False
 
         VERBOSE = True
-        VERBOSE_SNIFFED_PACKET_STEP = 1000
+        VERBOSE_SNIFFED_PACKET_STEP = 10000
         VERBOSE_PROCESSED_FLOW_STEP = 100
 
         RUN_THREADING = not DEBUG

@@ -4,6 +4,8 @@ import logging
 import os
 import threading
 import time
+from datetime import datetime
+
 from AgentExtractor import AgentExtractor
 from AgentProcessor import AgentProcessor
 from FlowGeneratorActions import FlowGeneratorActions
@@ -139,7 +141,7 @@ To parse input arguments:
                 self.agent_processor.process(flow)
 
                 if Config.RUN.VERBOSE and counter % Config.RUN.VERBOSE_PROCESSED_FLOW_STEP == 0:
-                    print("{} flows sent. ({} flows in the queue) ".format(counter, self.flow_pipeline.qsize()))
+                    print("{}: {} flows sent. ({} flows in the queue) ".format(datetime.now(), counter, self.flow_pipeline.qsize()))
 
     def run(self):
         Log.log('Program started.', logging.INFO)
