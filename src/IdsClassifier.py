@@ -98,6 +98,7 @@ def generate_model(input_dataset, output_model_name, output_label_index_name, be
         print(f"Best Hyperparameters: {grid_result.best_params_}")
         best_model = grid_result.best_estimator_
         model = best_model
+        best_model.summary()
     else:
 
         model.fit(X_train, y_train)
