@@ -15,11 +15,11 @@ pip install -r requirements.txt
 
 printStep "Running ICSFlow with this arguments"
 
-source = "br_icsnet"
-interval = 0.5
-predictor = "input/ids.joblib"
-target_file ="output/sniffed.csv"
-target_connection = "input/connection.txt"
+source="br_icsnet"
+interval=0.5
+predictor="input/ids.joblib"
+target_file="output/sniffed.csv"
+target_connection="input/connection.txt"
 
 
 
