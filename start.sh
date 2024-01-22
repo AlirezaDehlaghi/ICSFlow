@@ -26,11 +26,11 @@ target_connection = "input/connection.txt"
 
 echo " "
 echo "-E python3 src/ICSFlowGenerator.py sniff"
-echo "\t --source" source
-echo "\t --interval" interval
-echo "\t --predictor" predictor
-echo "\t --target_file" target_file
-echo "\t --target_connection" target_connection
+echo " source=" source
+echo " interval=" interval
+echo " predictor=" predictor
+echo " target_file=" target_file
+echo " target_connection=" target_connection
 
 printStep " "
 
