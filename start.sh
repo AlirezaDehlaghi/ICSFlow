@@ -7,7 +7,7 @@ printStep(){
     sleep 1
 }
 
-printStep("Getting last changes - pull request")
+printStep "Getting last changes pull request"
 sudo git pull
 
 printStep ("Check Requirement.txt")
