@@ -115,8 +115,8 @@ class ProcessStatusSenderMQTT:
         status[Config.Texts.num_discovered_attacks] = len(detected_attacks)
         #status["list_of_anomalies"] = list_of_anomalies
 
-        with open(os.path.join('output', str(end_time) +'.txt'), 'w') as file:
-            # Write your message to the file
-            file.write(json.dumps(status))
+        # with open(os.path.join('output', str(end_time) +'.txt'), 'w') as file:
+        #     # Write your message to the file
+        #     file.write(json.dumps(status))
 
         return status
