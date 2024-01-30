@@ -78,6 +78,6 @@ class AgentExtractor:
 
     def extract(self):
         if self.action == FlowGeneratorActions.SNIFF:
-            sniff(iface=self.source, prn=self.packet_handler)
+            sniff(iface=self.source, prn=self.packet_handler, store=0)
         elif self.action == FlowGeneratorActions.CONVERT:
             self.__read_pcap_file()

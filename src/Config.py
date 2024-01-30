@@ -17,7 +17,7 @@ class Config:
             return model_name + ".json"
 
     class StatusSender:
-        voting_interval = 5
+        voting_interval = 5 # seconds
 
     class Texts:
         src = "source"
