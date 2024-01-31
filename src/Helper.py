@@ -117,11 +117,12 @@ class Log:
 
     @staticmethod
     def log(text,  level):
-
-        msg = f"{text} [{inspect.currentframe().f_back}]"
+        frame = f"[{inspect.currentframe().f_back}]"
+        msg = f"{text} {frame}"
+        print_msg = f"{Log.log_colors[level]}[{logging.getLevelName(level)}] {text}\033[0m {frame}"
 
         logger = Log.event_logger if Log.event_logger else logging
         logger.log(level, msg)
 
-        print_msg = Log.log_colors[level] + f'[{logging.getLevelName(level)}] {msg}' + '\033[0m'
+
         print(print_msg)

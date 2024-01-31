@@ -9,6 +9,7 @@ printStep(){
 
 printStep "Getting last changes pull request"
 sudo git pull
+sleep 1
 
 printStep "Check Requirement.txt"
 pip install -r requirements.txt
