@@ -10,7 +10,7 @@ class Config:
 
     class Train:
         DEFAULT_TRAIN_DATASET = 'input/Dataset.csv'
-        BEST_SEARCH_OPTION = True
+        BEST_SEARCH_OPTION = False
 
         @staticmethod
         def labels_index_path(model_name):
