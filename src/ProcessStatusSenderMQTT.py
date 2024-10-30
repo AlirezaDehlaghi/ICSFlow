@@ -10,7 +10,7 @@ from Config import Config
 
 class ProcessStatusSenderMQTT:
     def __init__(self, server_connection_file, voting_interval=0):
-        self.client = Connection.build(server_connection_file) if server_connection_file.strip() else False
+        self.client = Connection.build(server_connection_file) if ((not server_connection_file is None) and server_connection_file.strip()) else False
         self.voting_interval = voting_interval
 
         self.link_flows = dict()

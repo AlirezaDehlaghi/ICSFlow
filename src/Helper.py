@@ -14,7 +14,8 @@ def get_packet_time(pkt_metadata):
     :param pkt_metadata: meta data received from PCAP file.
     :return: formatted packet time.
     """
-    return pkt_metadata.sec + pkt_metadata.usec / pow(10, 6)
+    first_pkt_timestamp = (pkt_metadata.tshigh << 32) | pkt_metadata.tslow
+    return first_pkt_timestamp / pkt_metadata.tsresol
 
 
 def format_decimal(value, rnd=3):

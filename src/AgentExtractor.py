@@ -39,7 +39,7 @@ class AgentExtractor:
         packet_para = PacketParameter(ether_pkt, pkt_time)
         flow_src = min(packet_para.get_src(), packet_para.get_dst())
         flow_dst = max(packet_para.get_src(), packet_para.get_dst())
-        flow_proto = packet_para.protocol_name
+        flow_proto = packet_para.type_protocol_name
         key = (flow_src, flow_dst, flow_proto)
 
         if not self.processing_dict.keys().__contains__(key):

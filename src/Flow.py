@@ -34,9 +34,9 @@ class Flow:
         s_start = sys.float_info.max
         r_start = sys.float_info.max
         if len(self.sen_list) != 0:
-            s_start = self.sen_list[0].packet_time
+            s_start = self.sen_list[0].time_stamp
         if len(self.rec_list) != 0:
-            r_start = self.rec_list[0].packet_time
+            r_start = self.rec_list[0].time_stamp
 
         return min(s_start, r_start)
 
@@ -44,9 +44,9 @@ class Flow:
         s_end = 0
         r_end = 0
         if len(self.sen_list) != 0:
-            s_end = self.sen_list[-1].packet_time
+            s_end = self.sen_list[-1].time_stamp
         if len(self.rec_list) != 0:
-            r_end = self.rec_list[-1].packet_time
+            r_end = self.rec_list[-1].time_stamp
 
         return max(s_end, r_end)
 
@@ -67,13 +67,13 @@ class Flow:
         if packet_parameter.get_src() == self.src:
             self.src_mac_list.add(packet_parameter.src_mac)
             self.dst_mac_list.add(packet_parameter.dst_mac)
-            if packet_parameter.is_ip():
+            if packet_parameter.is_ip_based():
                 self.src_ip_list.add(packet_parameter.src_ip)
                 self.dst_ip_list.add(packet_parameter.dst_ip)
         else:
             self.src_mac_list.add(packet_parameter.dst_mac)
             self.dst_mac_list.add(packet_parameter.src_mac)
-            if packet_parameter.is_ip():
+            if packet_parameter.is_ip_based():
                 self.src_ip_list.add(packet_parameter.dst_ip)
                 self.dst_ip_list.add(packet_parameter.src_ip)
 
@@ -83,13 +83,13 @@ class Flow:
             return
 
         if packet_parameter.get_src() == self.src:
-            self.acc_sen_dic[packet_parameter.ack] = packet_parameter.packet_time
+            self.acc_sen_dic[packet_parameter.ack] = packet_parameter.time_stamp
             if self.acc_rec_dic.keys().__contains__(packet_parameter.seq):
-                self.sen_delay.append(packet_parameter.packet_time - self.acc_rec_dic[packet_parameter.seq])
+                self.sen_delay.append(packet_parameter.time_stamp - self.acc_rec_dic[packet_parameter.seq])
         else:
-            self.acc_rec_dic[packet_parameter.ack] = packet_parameter.packet_time
+            self.acc_rec_dic[packet_parameter.ack] = packet_parameter.time_stamp
             if self.acc_sen_dic.keys().__contains__(packet_parameter.seq):
-                self.rec_delay.append(packet_parameter.packet_time - self.acc_sen_dic[packet_parameter.seq])
+                self.rec_delay.append(packet_parameter.time_stamp - self.acc_sen_dic[packet_parameter.seq])
 
 
     def compute_parameters(self):
@@ -254,7 +254,7 @@ class Flow:
         if Flow.packets_cnt(packets) == 1:
             return ''
 
-        return (packets[-1].packet_time - packets[0].packet_time) / (Flow.packets_cnt(packets) - 1)
+        return (packets[-1].time_stamp - packets[0].time_stamp) / (Flow.packets_cnt(packets) - 1)
 
     @staticmethod
     def ttl_avg(packets):
@@ -264,7 +264,7 @@ class Flow:
         if not packets[0].is_tcp():
             return ''
 
-        if not packets[0].is_ip():
+        if not packets[0].is_ip_based():
             return ''
         else:
             value = sum([pkt.ttl for pkt in packets]) / Flow.packets_cnt(packets)
@@ -311,7 +311,7 @@ class Flow:
 
         if Flow.packets_cnt(packets) == 0:
             return ''
-        if not packets[0].is_ip():
+        if not packets[0].is_ip_based():
             return ''
 
         return sum([int(pkt.fragment) for pkt in packets]) / Flow.packets_cnt(packets)
