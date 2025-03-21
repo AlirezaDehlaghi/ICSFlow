@@ -1,19 +1,19 @@
-import argparse
-from scapy.layers.l2 import Ether
 from scapy.all import *
-from Helper import Log, get_packet_time, format_time, format_decimal, average, maximum, minimum
+from Helper import format_time, format_decimal, average, maximum, minimum, string_array_to_string
 from PacketParameter import PacketParameter
 
 
 class Flow:
     REFERENCE_TIME = 0
 
-    def __init__(self, src, dst, protocol):
+    def __init__(self, key):
         self.parameters = dict()
 
-        self.src = min(src, dst)
-        self.des = max(src, dst)
-        self.protocol = protocol
+        self.key = key
+
+        self.src = min(key[0], key[1])
+        self.des = max(key[0], key[1])
+        self.protocol = key[2]
 
         self.sen_list = []
         self.rec_list = []
@@ -26,6 +26,8 @@ class Flow:
         self.dst_ip_list = set()
         self.src_mac_list = set()
         self.dst_mac_list = set()
+        self.src_port_list = set()
+        self.dst_port_list = set()
 
     def add_parameter(self, key, value):
         self.parameters[key] = value
@@ -70,13 +72,19 @@ class Flow:
             if packet_parameter.is_ip_based():
                 self.src_ip_list.add(packet_parameter.src_ip)
                 self.dst_ip_list.add(packet_parameter.dst_ip)
+                if packet_parameter.is_port_based():
+                    self.src_port_list.add(packet_parameter.src_port)
+                    self.dst_port_list.add(packet_parameter.dst_port)
+
         else:
             self.src_mac_list.add(packet_parameter.dst_mac)
             self.dst_mac_list.add(packet_parameter.src_mac)
             if packet_parameter.is_ip_based():
                 self.src_ip_list.add(packet_parameter.dst_ip)
                 self.dst_ip_list.add(packet_parameter.src_ip)
-
+                if packet_parameter.is_port_based():
+                    self.src_port_list.add(packet_parameter.dst_port)
+                    self.dst_port_list.add(packet_parameter.src_port)
 
     def compute_delay(self, packet_parameter):
         if not packet_parameter.is_tcp():
@@ -91,19 +99,25 @@ class Flow:
             if self.acc_sen_dic.keys().__contains__(packet_parameter.seq):
                 self.rec_delay.append(packet_parameter.time_stamp - self.acc_sen_dic[packet_parameter.seq])
 
-
     def compute_parameters(self):
-          # flow features
+        # flow features
         self.parameters.clear()
 
         self.parameters["sAddress"] = self.src
         self.parameters["rAddress"] = self.des
 
-        self.parameters["sMACs"] = '/'.join(self.src_mac_list)
-        self.parameters["rMACs"] = '/'.join(self.dst_mac_list)
+        self.parameters["sMACs"] = string_array_to_string(self.src_mac_list)
+        self.parameters["rMACs"] = string_array_to_string(self.dst_mac_list)
 
-        self.parameters["sIPs"] = '/'.join(self.src_ip_list)
-        self.parameters["rIPs"] = '/'.join(self.dst_ip_list)
+        self.parameters["sIPs"] = string_array_to_string(self.src_ip_list)
+        self.parameters["rIPs"] = string_array_to_string(self.dst_ip_list)
+
+        self.parameters["sIPs"] = string_array_to_string(self.src_ip_list)
+        self.parameters["rIPs"] = string_array_to_string(self.dst_ip_list)
+
+        if PacketParameter.use_port:
+            self.parameters["sPorts"] = string_array_to_string(self.src_port_list)
+            self.parameters["rPorts"] = string_array_to_string(self.dst_port_list)
 
         self.parameters["protocol"] = str(self.protocol)
 

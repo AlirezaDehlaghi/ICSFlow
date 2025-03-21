@@ -18,7 +18,7 @@ printStep "Running ICSFlow with this arguments"
 
 source="br_icsnet"
 interval=0.5
-predictor="input/ids.joblib"
+ids="input/ids.joblib"
 target_file="output/sniffed.csv"
 target_connection="input/connection.txt"
 
@@ -29,14 +29,15 @@ echo " "
 echo "-E python3 src/ICSFlowGenerator.py sniff"
 echo " source=" $source
 echo " interval=" $interval
-echo " predictor=" $predictor
+echo " ids=" $ids
 echo " target_file=" $target_file
 echo " target_connection=" $target_connection
 
 printStep " "
  
 #while true; do
-sudo -E python3 src/ICSFlowGenerator.py sniff  --source $source --interval $interval  --predictor $predictor --target_file   $target_file --target_connection  $target_connection
+sudo -E python3 src/ICSFlowGenerator.py --help
+#sudo -E python3 src/ICSFlowGenerator.py sniff  --source $source --interval $interval  --predictor $predictor --target_file   $target_file --target_connection  $target_connection
 #done
 #sudo -E python3 src/ICSFlowGenerator.py sniff  --source br_icsnet --interval 0.5  --predictor input/ids.joblib --target_file   output/sniffed.csv --target_connection  input/connection.txt
 

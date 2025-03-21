@@ -1,17 +1,21 @@
 import json
 import logging
-import os
+from abc import ABC
 from collections import Counter
 
 from Connection import Connection
 from Helper import Log
 from Config import Config
+from src.FlowProcessBase import FlowProcessBase
 
 
-class ProcessStatusSenderMQTT:
+class FlowSenderStatusMQTT(FlowProcessBase, ABC):
     def __init__(self, server_connection_file, voting_interval=0):
-        self.client = Connection.build(server_connection_file) if ((not server_connection_file is None) and server_connection_file.strip()) else False
+        super().__init__(server_connection_file)
         self.voting_interval = voting_interval
+
+    def _pre_setup(self):
+        self.client = Connection.build(self.data_address)
 
         self.link_flows = dict()
         self.timer_idx = 0
@@ -19,7 +23,7 @@ class ProcessStatusSenderMQTT:
         if self.client:
             self.client.start()
 
-    def process(self, flow):
+    def _process(self, flow):
         if not self.client:
             return
 
@@ -41,7 +45,6 @@ class ProcessStatusSenderMQTT:
         message = json.dumps(status)
         self.client.send(message)
 
-
     def __flush_status(self, end_time):
         if not len(self.link_flows) == 0:
             status = self.extract_network_status(end_time)
@@ -56,8 +59,6 @@ class ProcessStatusSenderMQTT:
         counter_flows = 0
         counter_anomalies = 0
         valid_ips = ["192.168.0.11", "192.168.0.12", "192.168.0.21", "192.168.0.22", "192.168.0.43"]
-
-        #list_of_anomalies = []
 
         for link, flows in self.link_flows.items():
             counter_flows += len(flows)

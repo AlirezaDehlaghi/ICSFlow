@@ -82,4 +82,3 @@ class MQTTConnection(Connection):
     def send(self, msg):
         self.client.publish(self.topic, msg)
 
-

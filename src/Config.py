@@ -1,5 +1,7 @@
 class Config:
     class RUN:
+        USEC_TIME_RESOLUTION = 10 ** 6
+
         DEBUG = False
 
         VERBOSE = True
@@ -17,7 +19,7 @@ class Config:
             return model_name + ".json"
 
     class StatusSender:
-        voting_interval = 5 # seconds
+        voting_interval = 5  # seconds
 
     class Texts:
         src = "source"
@@ -44,4 +46,3 @@ class Config:
         Port_Scan = "port-scan"
         Replay = "replay"
         MITM = "mitm"
-

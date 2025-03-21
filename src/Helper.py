@@ -1,3 +1,4 @@
+import errno
 import logging
 import os
 from datetime import datetime
@@ -5,6 +6,7 @@ import inspect
 
 
 # This is help for you
+from Config import Config
 
 
 def get_packet_time(pkt_metadata):
@@ -14,8 +16,37 @@ def get_packet_time(pkt_metadata):
     :param pkt_metadata: meta data received from PCAP file.
     :return: formatted packet time.
     """
-    first_pkt_timestamp = (pkt_metadata.tshigh << 32) | pkt_metadata.tslow
-    return first_pkt_timestamp / pkt_metadata.tsresol
+    if hasattr(pkt_metadata, 'tshigh') and hasattr(pkt_metadata, 'tslow') and hasattr(pkt_metadata, 'tsresol'):
+        first_pkt_timestamp = (pkt_metadata.tshigh << 32) | pkt_metadata.tslow
+        return first_pkt_timestamp / pkt_metadata.tsresol
+
+    elif hasattr(pkt_metadata, 'sec') and hasattr(pkt_metadata, 'usec'):
+        sec = pkt_metadata.sec
+        usec = pkt_metadata.usec
+        timestamp = sec + (usec / Config.RUN.USEC_TIME_RESOLUTION)  # Convert nanoseconds to seconds
+
+        return timestamp
+    else:
+        raise ValueError("Unsupported packet metadata format")
+
+
+def check_pcap_timestamp_resolution(pcap_file):
+    with open(pcap_file, "rb") as f:
+        magic_number = f.read(4)  # Read the first 4 bytes
+
+    # Convert to hexadecimal
+    magic_number_hex = magic_number[::-1].hex()
+
+    if magic_number_hex == "a1b2c3d4":
+        Config.RUN.USEC_TIME_RESOLUTION = 10**6
+    elif magic_number_hex == "a1b23c4d":
+        Config.RUN.USEC_TIME_RESOLUTION = 10**9
+    else:
+        Log.log('TIME resolution not found!', logging.ERROR)
+
+
+def string_array_to_string(values):
+    return '|'.join(values)
 
 
 def format_decimal(value, rnd=3):
@@ -45,6 +76,13 @@ def minimum(target):
         return ''
     else:
         return format_decimal(min(target))
+
+
+def check_file(file_address):
+    if file_address:
+        if not os.path.isfile(str(file_address)):
+            raise FileNotFoundError(
+                errno.ENOENT, os.strerror(errno.ENOENT), file_address)
 
 
 class Log:
@@ -97,7 +135,7 @@ class Log:
         return logger
 
     @staticmethod
-    def configure_log_files (directory, separate_event_log):
+    def configure_log_files(directory, separate_event_log):
 
         logging.basicConfig(
             level=logging.WARNING,  # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -115,7 +153,6 @@ class Log:
                 file_dir=directory,
                 file_ext='.txt')
 
-
     @staticmethod
     def log(text,  level):
         frame = f"[{inspect.currentframe().f_back}]"
@@ -124,6 +161,5 @@ class Log:
 
         logger = Log.event_logger if Log.event_logger else logging
         logger.log(level, msg)
-
 
         print(print_msg)

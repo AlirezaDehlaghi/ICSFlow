@@ -5,15 +5,17 @@ class PacketInfo:
     TYPE_IPX = "IPX"  # Internetwork Packet Exchange
     TYPE_VLAN = "VLAN"  # IEEE 802.1Q (VLAN tagging)
     TYPE_PPP = "PPP"  # Point-to-Point Protocol
-    TYPE_MPLS = "MPLS"  # Multiprotocol Label Switching
-    TYPE_MPLS = "MPLS"  # MPLS with downstream-assigned label
+    TYPE_MPLS_UNI = "MPLS_UNICAST"  # Multiprotocol Label Switching
+    TYPE_MPLS_MUL = "MPLS_MULTICAST"  # MPLS with downstream-assigned label
     TYPE_PPPoE = "PPPoE"  # PPP over Ethernet (Discovery stage)
-    TYPE_PPPoE = "PPPoE"  # PPP over Ethernet (Session stage)
     TYPE_QinQ = "QinQ"  # 802.1ad (Q-in-Q VLAN tagging)
+    TYPE_PTPv2 = "PTPv2"
     TYPE_Realtek = "Realtek"  # Realtek protocol
     TYPE_LLDP = "LLDP"  # Link Layer Discovery Protocol
-    TYPE_FCoE = "FCoE"  # Fibre Channel over Ethernet
-    TYPE_FCoE = "FCoE"  # FCoE Initialization Protocol
+    TYPE_FCoE = "FCoE"  # Fibre Channel over Ethernet AND  FCoE Initialization Protocol
+    TYPE_MRP = "MRP"  # Multiple (Multicast/Vlan) Registration Protocol, MVRP, MMRP
+    TYPE_MSRP = "MSRP"  # Stream Reservation Protocol
+    TYPE_AVTP = "AVTP"  # Audio Video Transport Protocol (AVTP)
 
     # Define packet types (Ethertypes)
     TYPES = {
@@ -22,15 +24,19 @@ class PacketInfo:
         0x86DD: TYPE_IPv6,  # Internet Protocol (IPv6)
         0x8137: TYPE_IPX,  # Internetwork Packet Exchange
         0x8100: TYPE_VLAN,  # IEEE 802.1Q (VLAN tagging)
+        0x22EA: TYPE_MSRP,  # Stream Reservation Protocol
+        0x22F0: TYPE_AVTP,  # Audio Video Transport Protocol (AVTP)
         0x880B: TYPE_PPP,  # Point-to-Point Protocol
-        0x8847: TYPE_MPLS,  # Multiprotocol Label Switching
-        0x8848: TYPE_MPLS,  # MPLS with downstream-assigned label
+        0x8847: TYPE_MPLS_UNI,  # Multiprotocol Label Switching
+        0x8848: TYPE_MPLS_MUL,  # MPLS with downstream-assigned label
         0x8863: TYPE_PPPoE,  # PPP over Ethernet (Discovery stage)
         0x8864: TYPE_PPPoE,  # PPP over Ethernet (Session stage)
         0x88A8: TYPE_QinQ,  # 802.1ad (Q-in-Q VLAN tagging)
         0x8899: TYPE_Realtek,  # Realtek protocol
+        0x88F5: TYPE_MRP,   # Multiple (Multicast/Vlan) Registration Protocol, MVRP, MMRP
+        0x88F7: TYPE_PTPv2,  # Precision Time Protocol
         0x88CC: TYPE_LLDP,  # Link Layer Discovery Protocol
-        0x8906: TYPE_FCoE,  # Fibre Channel over Ethernet
+        0x8906: TYPE_FCoE,  # Fibre Channel over Ethernet AND
         0x8914: TYPE_FCoE,  # FCoE Initialization Protocol
     }
 
