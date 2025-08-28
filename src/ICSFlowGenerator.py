@@ -138,7 +138,7 @@ class ICSFlowGenerator:
 
         self.agent_processor.add_process(FlowAnnotatorAttackPacket(args.attacks_packet))
         self.agent_processor.add_process(FlowAnnotatorAttackTime(args.attacks_time))
-        self.agent_processor.add_process(FlowAnnotatorAttackTime(args.ids))
+       # self.agent_processor.add_process(FlowAnnotatorAttackTime(args.ids))
         # self.agent_processor.add_process(FlowAnnotatorIDS(args.target_file))
         self.agent_processor.add_process(FlowSenderFile(args.target_file))
         self.agent_processor.add_process(FlowSenderMQTT(args.target_connection))

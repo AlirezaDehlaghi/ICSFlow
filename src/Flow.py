@@ -103,6 +103,15 @@ class Flow:
         # flow features
         self.parameters.clear()
 
+        if (len(self.sen_list)) == 0:  # if there is only received flow then SWAP send and received
+            self.src, self.des = self.des, self.src
+            self.sen_list, self.rec_list = self.rec_list, self.sen_list
+            self.acc_sen_dic, self.acc_rec_dic = self.acc_rec_dic,  self.acc_sen_dic
+            self.sen_delay, self.rec_delay = self.rec_delay, self.sen_delay
+            self.src_ip_list, self.dst_ip_list = self.dst_ip_list, self.src_ip_list
+            self.src_mac_list, self.dst_mac_list = self.dst_mac_list, self.src_mac_list
+            self.src_port_list, self.dst_port_list = self.dst_port_list, self.src_port_list
+
         self.parameters["sAddress"] = self.src
         self.parameters["rAddress"] = self.des
 
